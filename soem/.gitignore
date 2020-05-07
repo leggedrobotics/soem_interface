@@ -1,0 +1,7 @@
+build*
+install
+*~
+/doc/latex
+/doc/html
+*.clang*
+*.tags*
