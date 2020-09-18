@@ -56,7 +56,7 @@ class EthercatSlaveBase {
   };
 
   EthercatSlaveBase(EthercatBusBase* bus, const uint32_t address);
-  EthercatSlaveBase(){}
+  EthercatSlaveBase();
   virtual ~EthercatSlaveBase() = default;
 
   /**
@@ -248,7 +248,7 @@ class EthercatSlaveBase {
   // Mutex prohibiting simultaneous access to EtherCAT slave.
   mutable std::recursive_mutex mutex_;
   // Non owning pointer to the ethercat bus
-  EthercatBusBase* bus_;
+    EthercatBusBase* bus_{nullptr};
   // The bus address
   uint32_t address_{0};
 };

@@ -27,6 +27,7 @@
 namespace soem_interface {
 
 EthercatSlaveBase::EthercatSlaveBase(EthercatBusBase* bus, const uint32_t address) : bus_(bus), address_(address) {}
+EthercatSlaveBase::EthercatSlaveBase() : bus_(nullptr), address_(0) {}
 
 // This definition must not be in the header, because of the forward declaration of EthercatBus
 template <typename Value>
