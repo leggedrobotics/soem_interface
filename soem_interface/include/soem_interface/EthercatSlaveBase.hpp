@@ -56,6 +56,7 @@ class EthercatSlaveBase {
   };
 
   EthercatSlaveBase(EthercatBusBase* bus, const uint32_t address);
+  EthercatSlaveBase();
   virtual ~EthercatSlaveBase() = default;
 
   /**
@@ -95,6 +96,16 @@ class EthercatSlaveBase {
    * @return     The current pdo information.
    */
   virtual PdoInfo getCurrentPdoInfo() const = 0;
+
+  /**
+   * @brief      Set EthercatBusBase pointer
+   */
+  void setEthercatBusBasePointer(EthercatBusBase* bus){bus_ = bus;}
+
+  /**
+   * @brief      Set physical EtherCAT address
+   */
+  void setEthercatAddress(uint32_t address){address_ = address;}
 
   /**
    * @brief      Returns the bus address of the slave
@@ -237,9 +248,9 @@ class EthercatSlaveBase {
   // Mutex prohibiting simultaneous access to EtherCAT slave.
   mutable std::recursive_mutex mutex_;
   // Non owning pointer to the ethercat bus
-  EthercatBusBase* bus_;
+    EthercatBusBase* bus_{nullptr};
   // The bus address
-  const uint32_t address_{0};
+  uint32_t address_{0};
 };
 
 using EthercatSlaveBasePtr = std::shared_ptr<EthercatSlaveBase>;
