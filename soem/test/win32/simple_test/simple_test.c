@@ -186,7 +186,7 @@ void simpletest(char *ifname)
 
          /* request OP state for all slaves */
          ec_writestate(0);
-         chk = 40;
+         chk = 200;
          /* wait for all slaves to reach OP state */
          do
          {
@@ -295,7 +295,7 @@ OSAL_THREAD_FUNC ecatcheck(void *lpParam)
                      ec_slave[slave].state = EC_STATE_OPERATIONAL;
                      ec_writestate(slave);
                   }
-                  else if(ec_slave[slave].state > 0)
+                  else if(ec_slave[slave].state > EC_STATE_NONE)
                   {
                      if (ec_reconfig_slave(slave, EC_TIMEOUTMON))
                      {
@@ -307,7 +307,7 @@ OSAL_THREAD_FUNC ecatcheck(void *lpParam)
                   {
                      /* re-check state */
                      ec_statecheck(slave, EC_STATE_OPERATIONAL, EC_TIMEOUTRET);
-                     if (!ec_slave[slave].state)
+                     if (ec_slave[slave].state == EC_STATE_NONE)
                      {
                         ec_slave[slave].islost = TRUE;
                         printf("ERROR : slave %d lost\n",slave);
@@ -316,7 +316,7 @@ OSAL_THREAD_FUNC ecatcheck(void *lpParam)
                }
                if (ec_slave[slave].islost)
                {
-                  if(!ec_slave[slave].state)
+                  if(ec_slave[slave].state == EC_STATE_NONE)
                   {
                      if (ec_recover_slave(slave, EC_TIMEOUTMON))
                      {

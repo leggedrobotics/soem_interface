@@ -91,7 +91,7 @@ void redtest(char *ifname, char *ifname2)
          /* activate cyclic process data */
          dorun = 1;
          /* wait for all slaves to reach OP state */
-         ec_statecheck(0, EC_STATE_OPERATIONAL,  EC_TIMEOUTSTATE);
+         ec_statecheck(0, EC_STATE_OPERATIONAL,  5 * EC_TIMEOUTSTATE);
          oloop = ec_slave[0].Obytes;
          if ((oloop == 0) && (ec_slave[0].Obits > 0)) oloop = 1;
          if (oloop > 8) oloop = 8;
@@ -257,7 +257,7 @@ OSAL_THREAD_FUNC ecatcheck( void *ptr )
                      ec_slave[slave].state = EC_STATE_OPERATIONAL;
                      ec_writestate(slave);
                   }
-                  else if(ec_slave[slave].state > 0)
+                  else if(ec_slave[slave].state > EC_STATE_NONE)
                   {
                      if (ec_reconfig_slave(slave, EC_TIMEOUTMON))
                      {
@@ -269,7 +269,7 @@ OSAL_THREAD_FUNC ecatcheck( void *ptr )
                   {
                      /* re-check state */
                      ec_statecheck(slave, EC_STATE_OPERATIONAL, EC_TIMEOUTRET);
-                     if (!ec_slave[slave].state)
+                     if (ec_slave[slave].state == EC_STATE_NONE)
                      {
                         ec_slave[slave].islost = TRUE;
                         printf("ERROR : slave %d lost\n",slave);
@@ -278,7 +278,7 @@ OSAL_THREAD_FUNC ecatcheck( void *ptr )
                }
                if (ec_slave[slave].islost)
                {
-                  if(!ec_slave[slave].state)
+                  if(ec_slave[slave].state == EC_STATE_NONE)
                   {
                      if (ec_recover_slave(slave, EC_TIMEOUTMON))
                      {

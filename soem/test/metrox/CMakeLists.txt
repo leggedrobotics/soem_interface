@@ -1,0 +1,5 @@
+enable_language(CXX)
+set(SOURCES metrox.cpp)
+add_executable(metrox ${SOURCES})
+target_link_libraries(metrox soem)
+install(TARGETS metrox DESTINATION bin)
