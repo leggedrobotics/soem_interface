@@ -428,15 +428,15 @@ class EthercatBusBase {
                                &ecatEList_,
                                &ecatIdxStack_,
                                &ecatError_,
-                               0,
-                               0,
                                &ecatDcTime_,
                                &ecatSmCommtype_[0],
                                &ecatPdoAssign_[0],
                                &ecatPdoDesc_[0],
                                &ecatSm_,
                                &ecatFmmu_,
-                               nullptr};
+                               nullptr,
+                              nullptr,
+                              0};
 };
 
 using EthercatBusBasePtr = std::shared_ptr<EthercatBusBase>;
