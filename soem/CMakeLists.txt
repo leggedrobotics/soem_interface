@@ -4,6 +4,7 @@ project(soem_rsl C)
 
 find_package(catkin REQUIRED)
 
+
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   # Default to installing in SOEM source directory
   set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_LIST_DIR}/install)
@@ -52,6 +53,7 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "rtems")
   set(BUILD_TESTS FALSE)
 endif()
 
+
 message("OS is ${OS}")
 
 file(GLOB SOEM_SOURCES soem/*.c)
@@ -61,6 +63,17 @@ file(GLOB OSHW_SOURCES oshw/${OS}/*.c)
 file(GLOB SOEM_HEADERS soem/*.h)
 file(GLOB OSAL_HEADERS osal/osal.h osal/${OS}/*.h)
 file(GLOB OSHW_HEADERS oshw/${OS}/*.h)
+
+catkin_package(
+  INCLUDE_DIRS
+    ./
+    soem
+    osal
+    osal/${OS}
+    oshw/${OS}
+  LIBRARIES
+    soem
+)
 
 add_library(soem STATIC
   ${SOEM_SOURCES}
@@ -86,12 +99,6 @@ target_include_directories(soem
   $<INSTALL_INTERFACE:include/soem>
   )
 
-catkin_package(
-  INCLUDE_DIRS
-    soem
-  LIBRARIES
-    soem
-)
 
 message("LIB_DIR: ${SOEM_LIB_INSTALL_DIR}")
 
@@ -110,9 +117,9 @@ install(FILES
   ${SOEM_HEADERS}
   ${OSAL_HEADERS}
   ${OSHW_HEADERS}
-  DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION}/soem/soem)
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}/soem/soem)
 
-if(BUILD_TESTS) 
+if(BUILD_TESTS)
   add_subdirectory(test/linux/slaveinfo)
   add_subdirectory(test/linux/eepromtool)
   add_subdirectory(test/linux/simple_test)
