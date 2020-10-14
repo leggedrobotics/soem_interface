@@ -5,7 +5,9 @@ project(soem_rsl C)
 find_package(catkin REQUIRED)
 
 catkin_package(
-   INCLUDE_DIRS .
+   INCLUDE_DIRS 
+        ./soem
+        ./soem/osal
    LIBRARIES soem)
 
 set(SOEM_INCLUDE_INSTALL_DIR include/soem)
@@ -58,8 +60,10 @@ file(GLOB OSAL_SOURCES soem/osal/${OS}/*.c)
 file(GLOB OSHW_SOURCES soem/oshw/${OS}/*.c)
 
 file(GLOB SOEM_HEADERS soem/soem/*.h)
-file(GLOB OSAL_HEADERS soem/osal/osal.h osal/${OS}/*.h)
+file(GLOB OSAL_HEADERS soem/osal/osal.h soem/osal/${OS}/*.h)
 file(GLOB OSHW_HEADERS soem/oshw/${OS}/*.h)
+
+message(${OSAL_HEADERS})
 
 add_library(soem STATIC
   ${SOEM_SOURCES}
@@ -97,6 +101,9 @@ install(FILES
   ${OSAL_HEADERS}
   ${OSHW_HEADERS}
   DESTINATION ${SOEM_INCLUDE_INSTALL_DIR})
+  
+add_custom_target(link_target ALL
+                  COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_INSTALL_PREFIX}/include/soem/ethercattype.h ${CMAKE_INSTALL_PREFIX}/include/ethercattype.h)
 
 if(BUILD_TESTS) 
   add_subdirectory(soem/test/linux/slaveinfo)

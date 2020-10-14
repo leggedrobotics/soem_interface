@@ -31,7 +31,7 @@
 #include <chrono>
 
 // soem
-#include <soem/soem/ethercat.h>
+#include <soem/ethercat.h>
 
 #include <message_logger/message_logger.hpp>
 
