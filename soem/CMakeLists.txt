@@ -4,16 +4,6 @@ project(soem_rsl C)
 
 find_package(catkin REQUIRED)
 
-catkin_package(
-   INCLUDE_DIRS 
-        ./soem
-        ./soem/osal
-   LIBRARIES soem)
-
-set(SOEM_INCLUDE_INSTALL_DIR include/soem)
-set(SOEM_LIB_INSTALL_DIR lib)
-set(BUILD_TESTS TRUE)
-
 if(WIN32)
   set(OS "win32")
   include_directories(soem/oshw/win32/wpcap/Include)
@@ -54,6 +44,22 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "rtems")
 endif()
 
 message("OS is ${OS}")
+
+
+catkin_package(
+   INCLUDE_DIRS 
+        ./soem
+        ./soem/soem
+        ./soem/osal
+        ./soem/osal/${OS}
+        ./soem/oshw/${OS}
+   LIBRARIES soem)
+
+set(SOEM_INCLUDE_INSTALL_DIR include/soem)
+set(SOEM_LIB_INSTALL_DIR lib)
+set(BUILD_TESTS TRUE)
+
+
 
 file(GLOB SOEM_SOURCES soem/soem/*.c)
 file(GLOB OSAL_SOURCES soem/osal/${OS}/*.c)
@@ -100,10 +106,17 @@ install(FILES
   ${SOEM_HEADERS}
   ${OSAL_HEADERS}
   ${OSHW_HEADERS}
-  DESTINATION ${SOEM_INCLUDE_INSTALL_DIR})
+  DESTINATION ${SOEM_INCLUDE_INSTALL_DIR}
+)
+install(FILES
+    soem/soem/ethercattype.h
+    DESTINATION ${SOEM_INCLUDE_INSTALL_DIR}
+)
   
-add_custom_target(link_target ALL
-                  COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_INSTALL_PREFIX}/include/soem/ethercattype.h ${CMAKE_INSTALL_PREFIX}/include/ethercattype.h)
+#message(${CMAKE_INSTALL_PREFIX})
+#add_custom_target(link_target ALL
+ #                 COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_INSTALL_PREFIX}/include/soem/ethercattype.h ${CMAKE_INSTALL_PREFIX}/include/ethercattype.h
+ #                 VERBATIM)
 
 if(BUILD_TESTS) 
   add_subdirectory(soem/test/linux/slaveinfo)
