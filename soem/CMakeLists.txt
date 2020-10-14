@@ -108,9 +108,10 @@ install(FILES
   ${OSHW_HEADERS}
   DESTINATION ${SOEM_INCLUDE_INSTALL_DIR}
 )
+
 install(FILES
-    soem/soem/ethercattype.h
-    DESTINATION ${SOEM_INCLUDE_INSTALL_DIR}
+  ./soem/soem/ethercattype.h
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/include
 )
   
 #message(${CMAKE_INSTALL_PREFIX})
