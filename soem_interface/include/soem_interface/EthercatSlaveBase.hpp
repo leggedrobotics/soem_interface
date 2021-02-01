@@ -181,6 +181,14 @@ class EthercatSlaveBase {
     return sendSdoRead(index, subindex, completeAccess, value);
   }
 
+  virtual bool sendSdoReadBool(const uint16_t index, const uint8_t subindex, const bool completeAccess, bool& value) {
+    return sendSdoRead(index, subindex, completeAccess, value);
+  }
+
+  virtual bool sendSdoReadArray(const uint16_t index, const uint8_t subindex, const bool completeAccess, std::array<uint, 4>& value) {
+    return sendSdoRead(index, subindex, completeAccess, value);
+  }
+
   virtual bool sendSdoWriteInt8(const uint16_t index, const uint8_t subindex, const bool completeAccess, const int8_t value) {
     return sendSdoWrite(index, subindex, false, value);
   }
