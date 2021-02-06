@@ -30,9 +30,11 @@
 // message_logger
 #include <message_logger/message_logger.hpp>
 
+// soem_interface
+#include <soem_interface/EthercatBusBase.hpp>
+
 namespace soem_interface {
 
-class EthercatBusBase;
 
 /**
  * @brief      Base class for generic ethercat slaves using soem
@@ -123,7 +125,10 @@ class EthercatSlaveBase {
    * @return True if successful.
    */
   template <typename Value>
-  bool sendSdoWrite(const uint16_t index, const uint8_t subindex, const bool completeAccess, const Value value);
+  bool sendSdoWrite(const uint16_t index, const uint8_t subindex, const bool completeAccess, const Value value) {
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    return bus_->sendSdoWrite(address_, index, subindex, completeAccess, value);
+  }
 
   /*!
    * Send a reading SDO.
@@ -134,99 +139,21 @@ class EthercatSlaveBase {
    * @return True if successful.
    */
   template <typename Value>
-  bool sendSdoRead(const uint16_t index, const uint8_t subindex, const bool completeAccess, Value& value);
-
-  // Send SDOs.
-  virtual bool sendSdoReadInt8(const uint16_t index, const uint8_t subindex, const bool completeAccess, int8_t& value) {
-    return sendSdoRead(index, subindex, completeAccess, value);
+  bool sendSdoRead(const uint16_t index, const uint8_t subindex, const bool completeAccess, Value& value) {
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    return bus_->sendSdoRead(address_, index, subindex, completeAccess, value);
   }
 
-  virtual bool sendSdoReadInt16(const uint16_t index, const uint8_t subindex, const bool completeAccess, int16_t& value) {
-    return sendSdoRead(index, subindex, completeAccess, value);
-  }
-
-  virtual bool sendSdoReadInt32(const uint16_t index, const uint8_t subindex, const bool completeAccess, int32_t& value) {
-    return sendSdoRead(index, subindex, completeAccess, value);
-  }
-
-  virtual bool sendSdoReadInt64(const uint16_t index, const uint8_t subindex, const bool completeAccess, int64_t& value) {
-    return sendSdoRead(index, subindex, completeAccess, value);
-  }
-
-  virtual bool sendSdoReadUInt8(const uint16_t index, const uint8_t subindex, const bool completeAccess, uint8_t& value) {
-    return sendSdoRead(index, subindex, completeAccess, value);
-  }
-
-  virtual bool sendSdoReadUInt16(const uint16_t index, const uint8_t subindex, const bool completeAccess, uint16_t& value) {
-    return sendSdoRead(index, subindex, completeAccess, value);
-  }
-
-  virtual bool sendSdoReadUInt32(const uint16_t index, const uint8_t subindex, const bool completeAccess, uint32_t& value) {
-    return sendSdoRead(index, subindex, completeAccess, value);
-  }
-
-  virtual bool sendSdoReadUInt64(const uint16_t index, const uint8_t subindex, const bool completeAccess, uint64_t& value) {
-    return sendSdoRead(index, subindex, completeAccess, value);
-  }
-
-  virtual bool sendSdoReadFloat(const uint16_t index, const uint8_t subindex, const bool completeAccess, float& value) {
-    return sendSdoRead(index, subindex, completeAccess, value);
-  }
-
-  virtual bool sendSdoReadDouble(const uint16_t index, const uint8_t subindex, const bool completeAccess, double& value) {
-    return sendSdoRead(index, subindex, completeAccess, value);
-  }
-
-  virtual bool sendSdoReadString(const uint16_t index, const uint8_t subindex, const bool completeAccess, std::string& value) {
-    return sendSdoRead(index, subindex, completeAccess, value);
-  }
-
-  virtual bool sendSdoWriteInt8(const uint16_t index, const uint8_t subindex, const bool completeAccess, const int8_t value) {
-    return sendSdoWrite(index, subindex, false, value);
-  }
-
-  virtual bool sendSdoWriteInt16(const uint16_t index, const uint8_t subindex, const bool completeAccess, const int16_t value) {
-    return sendSdoWrite(index, subindex, false, value);
-  }
-
-  virtual bool sendSdoWriteInt32(const uint16_t index, const uint8_t subindex, const bool completeAccess, const int32_t value) {
-    return sendSdoWrite(index, subindex, false, value);
-  }
-
-  virtual bool sendSdoWriteInt64(const uint16_t index, const uint8_t subindex, const bool completeAccess, const int64_t value) {
-    return sendSdoWrite(index, subindex, false, value);
-  }
-
-  virtual bool sendSdoWriteUInt8(const uint16_t index, const uint8_t subindex, const bool completeAccess, const uint8_t value) {
-    return sendSdoWrite(index, subindex, false, value);
-  }
-
-  virtual bool sendSdoWriteUInt16(const uint16_t index, const uint8_t subindex, const bool completeAccess, const uint16_t value) {
-    return sendSdoWrite(index, subindex, false, value);
-  }
-
-  virtual bool sendSdoWriteUInt32(const uint16_t index, const uint8_t subindex, const bool completeAccess, const uint32_t value) {
-    return sendSdoWrite(index, subindex, false, value);
-  }
-
-  virtual bool sendSdoWriteUInt64(const uint16_t index, const uint8_t subindex, const bool completeAccess, const uint64_t value) {
-    return sendSdoWrite(index, subindex, false, value);
-  }
-
-  virtual bool sendSdoWriteFloat(const uint16_t index, const uint8_t subindex, const bool completeAccess, const float value) {
-    return sendSdoWrite(index, subindex, false, value);
-  }
-
-  virtual bool sendSdoWriteDouble(const uint16_t index, const uint8_t subindex, const bool completeAccess, const double value) {
-    return sendSdoWrite(index, subindex, false, value);
-  }
-
-  virtual bool sendSdoWriteString(const uint16_t index, const uint8_t subindex, const bool completeAccess, const std::string value) {
-      return sendSdoWrite(index, subindex, false, value);
-  }
-
+  /**
+   * Send a generic reading SDO.
+   * @warning Not implemented!
+   */
   virtual bool sendSdoReadGeneric(const std::string& indexString, const std::string& subindexString, const std::string& valueTypeString,
                                   std::string& valueString);
+  /**
+   * Send a generic writing SDO.
+   * @warning Not implemented!
+   */
   virtual bool sendSdoWriteGeneric(const std::string& indexString, const std::string& subindexString, const std::string& valueTypeString,
                                    const std::string& valueString);
 
