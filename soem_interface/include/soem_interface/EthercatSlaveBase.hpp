@@ -26,6 +26,7 @@
 #include <cstdint>
 #include <memory>
 #include <mutex>
+#include <typeinfo>
 
 // message_logger
 #include <message_logger/message_logger.hpp>
@@ -127,7 +128,13 @@ class EthercatSlaveBase {
   template <typename Value>
   bool sendSdoWrite(const uint16_t index, const uint8_t subindex, const bool completeAccess, const Value value) {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
-    return bus_->sendSdoWrite(address_, index, subindex, completeAccess, value);
+    const bool success =  bus_->sendSdoWrite(address_, index, subindex, completeAccess, value);
+    if(!success) {
+      MELO_ERROR_STREAM("Error writing SDO.\tAddress: " << address_ << "Index: " << (int)index
+                        << "\nSubindex: " << (int)subindex << "\n Complete Access: "
+                        << (int)completeAccess << "\nType: " << typeid(value).name());
+    }
+    return success;
   }
 
   /*!
@@ -141,7 +148,13 @@ class EthercatSlaveBase {
   template <typename Value>
   bool sendSdoRead(const uint16_t index, const uint8_t subindex, const bool completeAccess, Value& value) {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
-    return bus_->sendSdoRead(address_, index, subindex, completeAccess, value);
+    const bool success = bus_->sendSdoRead(address_, index, subindex, completeAccess, value);
+    if(!success) {
+      MELO_ERROR_STREAM("Error reading SDO.\tAddress: " << address_ << "Index: " << (int)index
+                        << "\nSubindex: " << (int)subindex << "\n Complete Access: "
+                        << (int)completeAccess << "\nType: " << typeid(value).name());
+    }
+    return success;
   }
 
   /**
