@@ -21,6 +21,7 @@
 */
 
 #include <soem_interface/EthercatBusBase.hpp>
+#include <soem_interface/EthercatSlaveBase.hpp>
 
 namespace soem_interface {
 

@@ -26,13 +26,16 @@
 #include <cstdint>
 #include <memory>
 #include <mutex>
+#include <typeinfo>
 
 // message_logger
 #include <message_logger/message_logger.hpp>
 
+// soem_interface
+#include <soem_interface/EthercatBusBase.hpp>
+
 namespace soem_interface {
 
-class EthercatBusBase;
 
 /**
  * @brief      Base class for generic ethercat slaves using soem
@@ -123,7 +126,16 @@ class EthercatSlaveBase {
    * @return True if successful.
    */
   template <typename Value>
-  bool sendSdoWrite(const uint16_t index, const uint8_t subindex, const bool completeAccess, const Value value);
+  bool sendSdoWrite(const uint16_t index, const uint8_t subindex, const bool completeAccess, const Value value) {
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    const bool success =  bus_->sendSdoWrite(address_, index, subindex, completeAccess, value);
+    if(!success) {
+      MELO_ERROR_STREAM("Error writing SDO.\tAddress: " << address_ << "Index: " << (int)index
+                        << "\nSubindex: " << (int)subindex << "\n Complete Access: "
+                        << (int)completeAccess << "\nType: " << typeid(value).name());
+    }
+    return success;
+  }
 
   /*!
    * Send a reading SDO.
@@ -134,9 +146,43 @@ class EthercatSlaveBase {
    * @return True if successful.
    */
   template <typename Value>
-  bool sendSdoRead(const uint16_t index, const uint8_t subindex, const bool completeAccess, Value& value);
+  bool sendSdoRead(const uint16_t index, const uint8_t subindex, const bool completeAccess, Value& value) {
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    const bool success = bus_->sendSdoRead(address_, index, subindex, completeAccess, value);
+    if(!success) {
+      MELO_ERROR_STREAM("Error reading SDO.\tAddress: " << address_ << "Index: " << (int)index
+                        << "\nSubindex: " << (int)subindex << "\n Complete Access: "
+                        << (int)completeAccess << "\nType: " << typeid(value).name());
+    }
+    return success;
+  }
 
-  // Send SDOs.
+  /**
+   * Send a generic reading SDO.
+   * @warning Not implemented!
+   */
+  virtual bool sendSdoReadGeneric(const std::string& indexString, const std::string& subindexString, const std::string& valueTypeString,
+                                  std::string& valueString);
+  /**
+   * Send a generic writing SDO.
+   * @warning Not implemented!
+   */
+  virtual bool sendSdoWriteGeneric(const std::string& indexString, const std::string& subindexString, const std::string& valueTypeString,
+                                   const std::string& valueString);
+
+  /**
+   * Send a special reading SDO to read SDOs of type visible string.
+   * @param index          Index of the SDO.
+   * @param subindex       Sub-index of the SDO.
+   * @param value          Return argument, will contain the value which was read.
+   * @return True if successful.
+   */
+  virtual bool sendSdoReadVisibleString(const uint16_t index, const uint8_t subindex, std::string& value);
+
+  /**
+   * Type-suffixed SDO calls.
+   * @deprecated Use the templated sendSdoRead<...> and sendSdoWrite<...> instead.
+   */
   virtual bool sendSdoReadInt8(const uint16_t index, const uint8_t subindex, const bool completeAccess, int8_t& value) {
     return sendSdoRead(index, subindex, completeAccess, value);
   }
@@ -224,20 +270,6 @@ class EthercatSlaveBase {
   virtual bool sendSdoWriteString(const uint16_t index, const uint8_t subindex, const bool completeAccess, const std::string value) {
       return sendSdoWrite(index, subindex, false, value);
   }
-
-  virtual bool sendSdoReadGeneric(const std::string& indexString, const std::string& subindexString, const std::string& valueTypeString,
-                                  std::string& valueString);
-  virtual bool sendSdoWriteGeneric(const std::string& indexString, const std::string& subindexString, const std::string& valueTypeString,
-                                   const std::string& valueString);
-
-  /**
-   * Send a special reading SDO to read SDOs of type visible string.
-   * @param index          Index of the SDO.
-   * @param subindex       Sub-index of the SDO.
-   * @param value          Return argument, will contain the value which was read.
-   * @return True if successful.
-   */
-  virtual bool sendSdoReadVisibleString(const uint16_t index, const uint8_t subindex, std::string& value);
 
  protected:
   /**
