@@ -36,11 +36,14 @@
 #include <message_logger/message_logger.hpp>
 
 // soem_interface
-#include <soem_interface/EthercatSlaveBase.hpp>
 #include <soem_interface/common/Macros.hpp>
 #include <soem_interface/common/ThreadSleep.hpp>
 
 namespace soem_interface {
+
+// forward declaration for EthercatSlaveBase
+class EthercatSlaveBase;
+using EthercatSlaveBasePtr = std::shared_ptr<EthercatSlaveBase>;
 
 /**
  * @brief      Class for managing an ethercat bus containing one or multpile
