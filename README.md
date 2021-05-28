@@ -60,7 +60,7 @@ EthercatSlaves can be added with addSlave(). After all the slaves have been adde
 #### EthercatBusManagerBase
 If multiple buses are connected to the same master then the buses are managed by the EthercatBusManagerBase.
 
-## DISCLAIMER
+## Note
 Due to the current pandemic we could not test this version of the soem_interface.
 
 Tests will be conducted as soon as possible.
