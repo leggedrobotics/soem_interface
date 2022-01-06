@@ -18,35 +18,20 @@
 # You should have received a copy of the GNU General Public License
 # along with the soem_interface.  If not, see <https://www.gnu.org/licenses/>.
 
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.5)
 project(soem_interface)
 
-add_definitions(-std=c++14 -Wall -Werror)
+add_definitions(-std=c++14 -Wall -Wextra)
 add_definitions(-DMELO_USE_COUT)
 
 set(PACKAGE_DEPENDENCIES
-  message_logger
-  soem_rsl
+         soem_rsl
+        message_logger
 )
 
-find_package(catkin REQUIRED
-  COMPONENTS
-    ${PACKAGE_DEPENDENCIES}
-)
-
-catkin_package(
-  INCLUDE_DIRS
-    include
-  LIBRARIES
-    ${PROJECT_NAME}
-  CATKIN_DEPENDS
-    ${PACKAGE_DEPENDENCIES}
-)
-
-include_directories(
-  include
-  ${catkin_INCLUDE_DIRS}
-)
+find_package(ament_cmake REQUIRED)
+find_package(soem_rsl)
+find_package(message_logger)
 
 add_library(
   ${PROJECT_NAME}
@@ -56,20 +41,32 @@ add_library(
   src/${PROJECT_NAME}/EthercatBusManagerBase.cpp
   src/${PROJECT_NAME}/EthercatBusBase.cpp
 )
-add_dependencies(
-  ${PROJECT_NAME}
-  ${catkin_EXPORTED_TARGETS}
-)
-target_link_libraries(
-  ${PROJECT_NAME}
-  ${catkin_LIBRARIES}
+
+target_include_directories(${PROJECT_NAME}
+        PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>)
+
+ament_target_dependencies(
+        ${PROJECT_NAME} ament_cmake soem_rsl message_logger
 )
 
-install(TARGETS ${PROJECT_NAME}
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+ament_export_libraries(${PROJECT_NAME})
+ament_export_dependencies(${PACKAGE_DEPENDENCIES})
+ament_export_include_directories(include)
+
+install(
+        DIRECTORY include/
+        DESTINATION include
 )
-install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+
+install(
+        TARGETS ${PROJECT_NAME}
+        EXPORT ${PROJECT_NAME}
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+        RUNTIME DESTINATION bin
+        INCLUDES DESTINATION include
 )
+
+ament_package()

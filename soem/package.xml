@@ -1,10 +1,13 @@
 <?xml version="1.0"?>
-<package format="2">
+<package format="3">
   <name>soem_rsl</name>
   <version>1.6.0</version>
   <description>The soem package</description>
   <maintainer email="johannes.pankert@mavt.ethz.ch">Johannes Pankert</maintainer>
   <license>GPLv3</license>
   <author email="rdiethelm@anybotics.com">Remo Diethelm</author>
-  <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
 </package>

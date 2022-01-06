@@ -21,7 +21,7 @@ You should have received a copy of the GNU General Public License
 along with the soem_interface.  If not, see <https://www.gnu.org/licenses/>.
 <-->
 
-<package format="2">
+<package format="3">
 
   <name>soem_interface</name>
   <version>0.4.0</version>
@@ -37,8 +37,11 @@ along with the soem_interface.  If not, see <https://www.gnu.org/licenses/>.
 
   <maintainer email="pankertj@ethz.ch">Johannes Pankert</maintainer>
 
-  <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>ament_cmake</buildtool_depend>
   <depend>message_logger</depend>
   <depend>soem_rsl</depend>
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
 
 </package>
