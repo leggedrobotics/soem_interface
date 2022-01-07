@@ -21,17 +21,17 @@
 cmake_minimum_required(VERSION 3.5)
 project(soem_interface)
 
-add_definitions(-std=c++14 -Wall -Wextra)
+add_definitions(-std=c++17 -Wall -Wextra)
 add_definitions(-DMELO_USE_COUT)
 
 set(PACKAGE_DEPENDENCIES
-         soem_rsl
-        message_logger
-)
+    ament_cmake
+    soem_rsl
+    message_logger)
 
 find_package(ament_cmake REQUIRED)
-find_package(soem_rsl)
-find_package(message_logger)
+find_package(soem_rsl REQUIRED)
+find_package(message_logger REQUIRED)
 
 add_library(
   ${PROJECT_NAME}
@@ -48,7 +48,7 @@ target_include_directories(${PROJECT_NAME}
         $<INSTALL_INTERFACE:include>)
 
 ament_target_dependencies(
-        ${PROJECT_NAME} ament_cmake soem_rsl message_logger
+        ${PROJECT_NAME} ${PACKAGE_DEPENDENCIES}
 )
 
 ament_export_libraries(${PROJECT_NAME})
@@ -62,7 +62,7 @@ install(
 
 install(
         TARGETS ${PROJECT_NAME}
-        EXPORT ${PROJECT_NAME}
+        EXPORT ${PROJECT_NAME}Target
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib
         RUNTIME DESTINATION bin
