@@ -149,6 +149,10 @@ bool EthercatBusBase::startup(const bool sizeCheck) {
   // Disable symmetrical transfers.
   ecatContext_.grouplist[0].blockLRW = 1;
 
+  // Set up the communication IO mapping.
+  // Note: ecx_config_map_group(..) requests the slaves to go to SAFE-OP.
+  ecx_config_map_group(&ecatContext_, &ioMap_, 0);
+
   // Initialize the communication interfaces of all slaves.
   for (auto& slave : slaves_) {
     if (!slave->startup()) {
@@ -157,10 +161,6 @@ bool EthercatBusBase::startup(const bool sizeCheck) {
       return false;
     }
   }
-
-  // Set up the communication IO mapping.
-  // Note: ecx_config_map_group(..) requests the slaves to go to SAFE-OP.
-  ecx_config_map_group(&ecatContext_, &ioMap_, 0);
 
   // Check if the size of the IO mapping fits our slaves.
   bool ioMapIsOk = true;
