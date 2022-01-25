@@ -153,6 +153,8 @@ bool EthercatBusBase::startup(const bool sizeCheck) {
   // Note: ecx_config_map_group(..) requests the slaves to go to SAFE-OP.
   ecx_config_map_group(&ecatContext_, &ioMap_, 0);
 
+  //ecx_configdc(&ecatContext_);
+
   // Initialize the communication interfaces of all slaves.
   for (auto& slave : slaves_) {
     if (!slave->startup()) {
@@ -161,6 +163,7 @@ bool EthercatBusBase::startup(const bool sizeCheck) {
       return false;
     }
   }
+
 
   // Check if the size of the IO mapping fits our slaves.
   bool ioMapIsOk = true;
@@ -288,18 +291,35 @@ void EthercatBusBase::setState(const uint16_t state, const uint16_t slave) {
 
 bool EthercatBusBase::waitForState(const uint16_t state, const uint16_t slave, const unsigned int maxRetries, const double retrySleep) {
   assert(static_cast<int>(slave) <= getNumberOfSlaves());
+  uint16_t returnedState = 0;
   std::lock_guard<std::recursive_mutex> guard(contextMutex_);
   for (unsigned int retry = 0; retry <= maxRetries; retry++) {
-    if (ecx_statecheck(&ecatContext_, slave, state, static_cast<int>(1e6 * retrySleep)) == state) {
-      MELO_DEBUG_STREAM("Slave " << slave << ": State " << state << " has been reached.");
+    int timeout = EC_TIMEOUTSTATE;
+    switch (static_cast<ec_state>(state)) {
+      case EC_STATE_NONE:
+      case EC_STATE_INIT:
+      case EC_STATE_PRE_OP:
+      case EC_STATE_BOOT:
+        break;
+      case EC_STATE_SAFE_OP:
+        timeout = EC_TIMEOUTSTATE*4;
+        break;
+      case EC_STATE_OPERATIONAL:
+        ecx_send_processdata(&ecatContext_);
+        wkc_ = ecx_receive_processdata(&ecatContext_, EC_TIMEOUTRET);
+        timeout = 50000;
+        break;
+      case EC_STATE_ACK:
+        break;
+    }
+    returnedState = ecx_statecheck(&ecatContext_, slave, state, timeout);
+    if (returnedState == state) {
+      MELO_DEBUG_STREAM("[SOEM_Interface] Slave: " << slave << ": State " << state << " has been reached after " << retry << " tries");
       return true;
     }
-    // TODO: Do this for all states?
-    ecx_send_processdata(&ecatContext_);
-    wkc_ = ecx_receive_processdata(&ecatContext_, EC_TIMEOUTRET);
   }
-
-  MELO_WARN_STREAM("Slave " << slave << ": State " << state << " has not been reached.");
+  MELO_WARN_STREAM("[SOEM_Interface] Slave " << slave << ": Targetstate " << state << " has not been reached. Current State: " << returnedState);
+  printALStatus(slave);
   return false;
 }
 
@@ -353,7 +373,7 @@ void EthercatBusBase::printALStatus(const uint16_t slave) {
   std::lock_guard<std::recursive_mutex> guard(contextMutex_);
   assert(static_cast<int>(slave) <= getNumberOfSlaves());
 
-  MELO_INFO_STREAM(" slave: " << slave << " alStatusCode: 0x" << std::setfill('0') <<
+  MELO_INFO_STREAM("[SOEM_Interface] slave: " << slave << " alStatusCode: 0x" << std::setfill('0') <<
                    std::setw(8) << std::hex << ecatContext_.slavelist[slave].ALstatuscode <<
                    " " << ec_ALstatuscode2string(ecatContext_.slavelist[slave].ALstatuscode));
 }
