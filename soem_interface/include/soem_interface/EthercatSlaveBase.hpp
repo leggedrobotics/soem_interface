@@ -183,93 +183,93 @@ class EthercatSlaveBase {
 //   * Type-suffixed SDO calls.
 //   * @deprecated Use the templated sendSdoRead<...> and sendSdoWrite<...> instead.
 //   */
-//  virtual bool sendSdoReadInt8(const uint16_t index, const uint8_t subindex, const bool completeAccess, int8_t& value) {
-//    return sendSdoRead(index, subindex, completeAccess, value);
-//  }
-//
-//  virtual bool sendSdoReadInt16(const uint16_t index, const uint8_t subindex, const bool completeAccess, int16_t& value) {
-//    return sendSdoRead(index, subindex, completeAccess, value);
-//  }
-//
-//  virtual bool sendSdoReadInt32(const uint16_t index, const uint8_t subindex, const bool completeAccess, int32_t& value) {
-//    return sendSdoRead(index, subindex, completeAccess, value);
-//  }
-//
-//  virtual bool sendSdoReadInt64(const uint16_t index, const uint8_t subindex, const bool completeAccess, int64_t& value) {
-//    return sendSdoRead(index, subindex, completeAccess, value);
-//  }
-//
-//  virtual bool sendSdoReadUInt8(const uint16_t index, const uint8_t subindex, const bool completeAccess, uint8_t& value) {
-//    return sendSdoRead(index, subindex, completeAccess, value);
-//  }
-//
-//  virtual bool sendSdoReadUInt16(const uint16_t index, const uint8_t subindex, const bool completeAccess, uint16_t& value) {
-//    return sendSdoRead(index, subindex, completeAccess, value);
-//  }
-//
-//  virtual bool sendSdoReadUInt32(const uint16_t index, const uint8_t subindex, const bool completeAccess, uint32_t& value) {
-//    return sendSdoRead(index, subindex, completeAccess, value);
-//  }
-//
-//  virtual bool sendSdoReadUInt64(const uint16_t index, const uint8_t subindex, const bool completeAccess, uint64_t& value) {
-//    return sendSdoRead(index, subindex, completeAccess, value);
-//  }
-//
-//  virtual bool sendSdoReadFloat(const uint16_t index, const uint8_t subindex, const bool completeAccess, float& value) {
-//    return sendSdoRead(index, subindex, completeAccess, value);
-//  }
-//
-//  virtual bool sendSdoReadDouble(const uint16_t index, const uint8_t subindex, const bool completeAccess, double& value) {
-//    return sendSdoRead(index, subindex, completeAccess, value);
-//  }
-//
-//  virtual bool sendSdoReadString(const uint16_t index, const uint8_t subindex, const bool completeAccess, std::string& value) {
-//    return sendSdoRead(index, subindex, completeAccess, value);
-//  }
-//
-//  virtual bool sendSdoWriteInt8(const uint16_t index, const uint8_t subindex, const bool completeAccess, const int8_t value) {
-//    return sendSdoWrite(index, subindex, false, value);
-//  }
-//
-//  virtual bool sendSdoWriteInt16(const uint16_t index, const uint8_t subindex, const bool completeAccess, const int16_t value) {
-//    return sendSdoWrite(index, subindex, false, value);
-//  }
-//
-//  virtual bool sendSdoWriteInt32(const uint16_t index, const uint8_t subindex, const bool completeAccess, const int32_t value) {
-//    return sendSdoWrite(index, subindex, false, value);
-//  }
-//
-//  virtual bool sendSdoWriteInt64(const uint16_t index, const uint8_t subindex, const bool completeAccess, const int64_t value) {
-//    return sendSdoWrite(index, subindex, false, value);
-//  }
-//
-//  virtual bool sendSdoWriteUInt8(const uint16_t index, const uint8_t subindex, const bool completeAccess, const uint8_t value) {
-//    return sendSdoWrite(index, subindex, false, value);
-//  }
-//
-//  virtual bool sendSdoWriteUInt16(const uint16_t index, const uint8_t subindex, const bool completeAccess, const uint16_t value) {
-//    return sendSdoWrite(index, subindex, false, value);
-//  }
-//
-//  virtual bool sendSdoWriteUInt32(const uint16_t index, const uint8_t subindex, const bool completeAccess, const uint32_t value) {
-//    return sendSdoWrite(index, subindex, false, value);
-//  }
-//
-//  virtual bool sendSdoWriteUInt64(const uint16_t index, const uint8_t subindex, const bool completeAccess, const uint64_t value) {
-//    return sendSdoWrite(index, subindex, false, value);
-//  }
-//
-//  virtual bool sendSdoWriteFloat(const uint16_t index, const uint8_t subindex, const bool completeAccess, const float value) {
-//    return sendSdoWrite(index, subindex, false, value);
-//  }
-//
-//  virtual bool sendSdoWriteDouble(const uint16_t index, const uint8_t subindex, const bool completeAccess, const double value) {
-//    return sendSdoWrite(index, subindex, false, value);
-//  }
-//
-//  virtual bool sendSdoWriteString(const uint16_t index, const uint8_t subindex, const bool completeAccess, const std::string value) {
-//      return sendSdoWrite(index, subindex, false, value);
-//  }
+  virtual bool sendSdoReadInt8(const uint16_t index, const uint8_t subindex, const bool completeAccess, int8_t& value) {
+    return sendSdoRead(index, subindex, completeAccess, value);
+  }
+
+  virtual bool sendSdoReadInt16(const uint16_t index, const uint8_t subindex, const bool completeAccess, int16_t& value) {
+    return sendSdoRead(index, subindex, completeAccess, value);
+  }
+
+  virtual bool sendSdoReadInt32(const uint16_t index, const uint8_t subindex, const bool completeAccess, int32_t& value) {
+    return sendSdoRead(index, subindex, completeAccess, value);
+  }
+
+  virtual bool sendSdoReadInt64(const uint16_t index, const uint8_t subindex, const bool completeAccess, int64_t& value) {
+    return sendSdoRead(index, subindex, completeAccess, value);
+  }
+
+  virtual bool sendSdoReadUInt8(const uint16_t index, const uint8_t subindex, const bool completeAccess, uint8_t& value) {
+    return sendSdoRead(index, subindex, completeAccess, value);
+  }
+
+  virtual bool sendSdoReadUInt16(const uint16_t index, const uint8_t subindex, const bool completeAccess, uint16_t& value) {
+    return sendSdoRead(index, subindex, completeAccess, value);
+  }
+
+  virtual bool sendSdoReadUInt32(const uint16_t index, const uint8_t subindex, const bool completeAccess, uint32_t& value) {
+    return sendSdoRead(index, subindex, completeAccess, value);
+  }
+
+  virtual bool sendSdoReadUInt64(const uint16_t index, const uint8_t subindex, const bool completeAccess, uint64_t& value) {
+    return sendSdoRead(index, subindex, completeAccess, value);
+  }
+
+  virtual bool sendSdoReadFloat(const uint16_t index, const uint8_t subindex, const bool completeAccess, float& value) {
+    return sendSdoRead(index, subindex, completeAccess, value);
+  }
+
+  virtual bool sendSdoReadDouble(const uint16_t index, const uint8_t subindex, const bool completeAccess, double& value) {
+    return sendSdoRead(index, subindex, completeAccess, value);
+  }
+
+  virtual bool sendSdoReadString(const uint16_t index, const uint8_t subindex, const bool completeAccess, std::string& value) {
+    return sendSdoRead(index, subindex, completeAccess, value);
+  }
+
+  virtual bool sendSdoWriteInt8(const uint16_t index, const uint8_t subindex, const bool completeAccess, const int8_t value) {
+    return sendSdoWrite(index, subindex, false, value);
+  }
+
+  virtual bool sendSdoWriteInt16(const uint16_t index, const uint8_t subindex, const bool completeAccess, const int16_t value) {
+    return sendSdoWrite(index, subindex, false, value);
+  }
+
+  virtual bool sendSdoWriteInt32(const uint16_t index, const uint8_t subindex, const bool completeAccess, const int32_t value) {
+    return sendSdoWrite(index, subindex, false, value);
+  }
+
+  virtual bool sendSdoWriteInt64(const uint16_t index, const uint8_t subindex, const bool completeAccess, const int64_t value) {
+    return sendSdoWrite(index, subindex, false, value);
+  }
+
+  virtual bool sendSdoWriteUInt8(const uint16_t index, const uint8_t subindex, const bool completeAccess, const uint8_t value) {
+    return sendSdoWrite(index, subindex, false, value);
+  }
+
+  virtual bool sendSdoWriteUInt16(const uint16_t index, const uint8_t subindex, const bool completeAccess, const uint16_t value) {
+    return sendSdoWrite(index, subindex, false, value);
+  }
+
+  virtual bool sendSdoWriteUInt32(const uint16_t index, const uint8_t subindex, const bool completeAccess, const uint32_t value) {
+    return sendSdoWrite(index, subindex, false, value);
+  }
+
+  virtual bool sendSdoWriteUInt64(const uint16_t index, const uint8_t subindex, const bool completeAccess, const uint64_t value) {
+    return sendSdoWrite(index, subindex, false, value);
+  }
+
+  virtual bool sendSdoWriteFloat(const uint16_t index, const uint8_t subindex, const bool completeAccess, const float value) {
+    return sendSdoWrite(index, subindex, false, value);
+  }
+
+  virtual bool sendSdoWriteDouble(const uint16_t index, const uint8_t subindex, const bool completeAccess, const double value) {
+    return sendSdoWrite(index, subindex, false, value);
+  }
+
+  virtual bool sendSdoWriteString(const uint16_t index, const uint8_t subindex, const bool completeAccess, const std::string value) {
+      return sendSdoWrite(index, subindex, false, value);
+  }
 
  protected:
   /**

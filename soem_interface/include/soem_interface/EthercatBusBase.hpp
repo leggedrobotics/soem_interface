@@ -348,6 +348,7 @@ class EthercatBusBase {
     memcpy(ecatContext_.slavelist[slave].outputs, &rxPdo, sizeof(RxPdo));
   }
 
+
  protected:
   //! Name of the bus.
   std::string name_;
