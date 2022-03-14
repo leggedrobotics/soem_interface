@@ -220,6 +220,15 @@ void EthercatBusBase::updateRead() {
   //! Check the working counter.
   if (!workingCounterIsOk()) {
     ++workingCounterTooLowCounter_;
+    std::lock_guard<std::recursive_mutex> guard(contextMutex_);
+    uint16 returnedState = ecx_readstate(&ecatContext_);
+    if(returnedState != EC_STATE_OPERATIONAL){
+      MELO_DEBUG_STREAM("[EthercatBusBase] at least one slave not in OP state.")
+    }
+    MELO_DEBUG_STREAM("[EthercatBusBase] Minimum returned state " << returnedState );
+    MELO_DEBUG_STREAM("[SOEM_Interface] slave: " << 0 << " alStatusCode: 0x" << std::setfill('0') <<
+                                                std::setw(8) << std::hex << ecatContext_.slavelist[0].ALstatuscode <<
+                                                " " << ec_ALstatuscode2string(ecatContext_.slavelist[0].ALstatuscode));
     if (!busIsOk()) {
       MELO_WARN_THROTTLE_STREAM(1.0, "Bus is not ok. Too many working counter too low in a row: " << workingCounterTooLowCounter_)
     }
