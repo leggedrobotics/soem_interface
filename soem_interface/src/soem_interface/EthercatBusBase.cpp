@@ -149,21 +149,22 @@ bool EthercatBusBase::startup(const bool sizeCheck) {
   // Disable symmetrical transfers.
   ecatContext_.grouplist[0].blockLRW = 1;
 
-  // Set up the communication IO mapping.
-  // Note: ecx_config_map_group(..) requests the slaves to go to SAFE-OP.
-  ecx_config_map_group(&ecatContext_, &ioMap_, 0);
-
   //ecx_configdc(&ecatContext_);
 
   // Initialize the communication interfaces of all slaves.
   for (auto& slave : slaves_) {
+    MELO_DEBUG_STREAM("Starting slave: " << slave->getName())
     if (!slave->startup()) {
       MELO_ERROR_STREAM("[" << getName() << "] "
                             << "Slave '" << slave->getName() << "' was not initialized successfully.");
       return false;
-    }
+    } else{MELO_DEBUG_STREAM("Successfully started slave: " << slave->getName())}
   }
 
+  // Set up the communication IO mapping.
+  // Note: ecx_config_map_group(..) requests the slaves to go to SAFE-OP.
+  int ioMapSize = ecx_config_map_group(&ecatContext_, &ioMap_, 0);
+  MELO_DEBUG_STREAM("Configured ioMap with size: " << ioMapSize)
 
   // Check if the size of the IO mapping fits our slaves.
   bool ioMapIsOk = true;
