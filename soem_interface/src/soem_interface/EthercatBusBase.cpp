@@ -149,7 +149,14 @@ bool EthercatBusBase::startup(const bool sizeCheck) {
   // Disable symmetrical transfers.
   ecatContext_.grouplist[0].blockLRW = 1;
 
-  //ecx_configdc(&ecatContext_);
+  //some slave might require SAFE_OP during setup...
+//  setState(EC_STATE_PRE_OP);
+//  waitForState(EC_STATE_PRE_OP,0);
+//  MELO_DEBUG_STREAM("[EthercatBus] Bus Startup: Set all salves to SAFE_OP")
+  // Set up the communication IO mapping.
+  // Note: ecx_config_map_group(..) requests the slaves to go to SAFE-OP.
+  int ioMapSize = ecx_config_map_group(&ecatContext_, &ioMap_, 0);
+  MELO_DEBUG_STREAM("Configured ioMap with size: " << ioMapSize)
 
   // Initialize the communication interfaces of all slaves.
   for (auto& slave : slaves_) {
@@ -161,10 +168,6 @@ bool EthercatBusBase::startup(const bool sizeCheck) {
     } else{MELO_DEBUG_STREAM("Successfully started slave: " << slave->getName())}
   }
 
-  // Set up the communication IO mapping.
-  // Note: ecx_config_map_group(..) requests the slaves to go to SAFE-OP.
-  int ioMapSize = ecx_config_map_group(&ecatContext_, &ioMap_, 0);
-  MELO_DEBUG_STREAM("Configured ioMap with size: " << ioMapSize)
 
   // Check if the size of the IO mapping fits our slaves.
   bool ioMapIsOk = true;
@@ -289,10 +292,10 @@ void EthercatBusBase::shutdown() {
 
 void EthercatBusBase::setState(const uint16_t state, const uint16_t slave) {
   std::lock_guard<std::recursive_mutex> guard(contextMutex_);
-  if(!initlialized_) {
-    MELO_ERROR_STREAM("Bus " << name_ << " was not successfully initialized, skipping operation");
-    return;
-  }
+//  if(!initlialized_) {
+//    MELO_ERROR_STREAM("Bus " << name_ << " was not successfully initialized, skipping operation");
+//    return;
+//  }
   assert(static_cast<int>(slave) <= getNumberOfSlaves());
   ecatContext_.slavelist[slave].state = state;
   ecx_writestate(&ecatContext_, slave);
@@ -382,7 +385,7 @@ std::string EthercatBusBase::getErrorString(ec_errort error) {
 void EthercatBusBase::printALStatus(const uint16_t slave) {
   std::lock_guard<std::recursive_mutex> guard(contextMutex_);
   assert(static_cast<int>(slave) <= getNumberOfSlaves());
-
+  MELO_ERROR_STREAM("Slave " << slave << " in ecat sm state: " << getState(slave))
   MELO_INFO_STREAM("[SOEM_Interface] slave: " << slave << " alStatusCode: 0x" << std::setfill('0') <<
                    std::setw(8) << std::hex << ecatContext_.slavelist[slave].ALstatuscode <<
                    " " << ec_ALstatuscode2string(ecatContext_.slavelist[slave].ALstatuscode));
@@ -430,6 +433,15 @@ EthercatBusBase::PdoSizeMap EthercatBusBase::getHardwarePdoSizes() {
 
 EthercatBusBase::PdoSizePair EthercatBusBase::getHardwarePdoSizes(const uint16_t slave) {
   return std::make_pair(ecatContext_.slavelist[slave].Obytes, ecatContext_.slavelist[slave].Ibytes);
+}
+
+int EthercatBusBase::getState(const uint16_t slave) {
+  std::lock_guard<std::recursive_mutex> guard(contextMutex_);
+  int lowest_state = ecx_readstate(&ecatContext_);
+  if(slave == 0){
+    return lowest_state;
+  }
+  return static_cast<int>(ecatContext_.slavelist[slave].state);
 }
 
 template<>

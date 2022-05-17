@@ -155,6 +155,14 @@ class EthercatBusBase {
   bool waitForState(const uint16_t state, const uint16_t slave = 0, const unsigned int maxRetries = 40, const double retrySleep = 0.001);
 
   /*!
+   * Reads the ethercat state machine state
+   * @param slave address of the slave, 0 for the lowest state of all slaves
+   * @return ecat sm state (EC_STATE_...) of the slave.
+   */
+
+  int getState(const uint16_t slave = 0);
+
+  /*!
    * Generate and return the error string.
    * @param error EtherCAT error object.
    * @return The error string.
@@ -196,7 +204,7 @@ class EthercatBusBase {
    */
   PdoSizeMap getHardwarePdoSizes();
 
-  /*!
+  /*!     
    * Returns a pair with the TxPdo and RxPdo sizes for the requested address
    * Overloads the "PdoSizeMap getHardwarePdoSizes()" method.
    *
@@ -229,6 +237,8 @@ class EthercatBusBase {
       MELO_ERROR_STREAM("Slave " << slave << ": Working counter too low (" << wkc << ") for writing SDO (ID: 0x" << std::setfill('0')
                                  << std::setw(4) << std::hex << index << ", SID 0x" << std::setfill('0') << std::setw(2) << std::hex
                                  << static_cast<uint16_t>(subindex) << ").");
+      checkForSdoErrors(slave, index);
+      printALStatus();
       return false;
     }
     return true;
@@ -256,6 +266,9 @@ class EthercatBusBase {
       MELO_ERROR_STREAM("Slave " << slave << ": Working counter too low (" << wkc << ") for reading SDO (ID: 0x" << std::setfill('0')
                                  << std::setw(4) << std::hex << index << ", SID 0x" << std::setfill('0') << std::setw(2) << std::hex
                                  << static_cast<uint16_t>(subindex) << ").");
+
+      checkForSdoErrors(slave, index);
+      printALStatus();
       return false;
     }
     if (size != sizeof(Value)) {
