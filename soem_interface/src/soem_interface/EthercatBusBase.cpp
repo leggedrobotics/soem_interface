@@ -150,13 +150,9 @@ bool EthercatBusBase::startup(const bool sizeCheck) {
   ecatContext_.grouplist[0].blockLRW = 1;
 
   //some slave might require SAFE_OP during setup...
-//  setState(EC_STATE_PRE_OP);
-//  waitForState(EC_STATE_PRE_OP,0);
+  setState(EC_STATE_PRE_OP);
+  waitForState(EC_STATE_PRE_OP,0);
 //  MELO_DEBUG_STREAM("[EthercatBus] Bus Startup: Set all salves to SAFE_OP")
-  // Set up the communication IO mapping.
-  // Note: ecx_config_map_group(..) requests the slaves to go to SAFE-OP.
-  int ioMapSize = ecx_config_map_group(&ecatContext_, &ioMap_, 0);
-  MELO_DEBUG_STREAM("Configured ioMap with size: " << ioMapSize)
 
   // Initialize the communication interfaces of all slaves.
   for (auto& slave : slaves_) {
@@ -168,6 +164,10 @@ bool EthercatBusBase::startup(const bool sizeCheck) {
     } else{MELO_DEBUG_STREAM("Successfully started slave: " << slave->getName())}
   }
 
+  // Set up the communication IO mapping.
+  // Note: ecx_config_map_group(..) requests the slaves to go to SAFE-OP.
+  int ioMapSize = ecx_config_map_group(&ecatContext_, &ioMap_, 0);
+  MELO_DEBUG_STREAM("Configured ioMap with size: " << ioMapSize)
 
   // Check if the size of the IO mapping fits our slaves.
   bool ioMapIsOk = true;
