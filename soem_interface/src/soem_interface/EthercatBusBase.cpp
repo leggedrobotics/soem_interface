@@ -149,7 +149,6 @@ bool EthercatBusBase::startup(const bool sizeCheck) {
   // Disable symmetrical transfers.
   ecatContext_.grouplist[0].blockLRW = 1;
 
-  //some slave might require SAFE_OP during setup...
   setState(EC_STATE_PRE_OP);
   waitForState(EC_STATE_PRE_OP,0);
 //  MELO_DEBUG_STREAM("[EthercatBus] Bus Startup: Set all salves to SAFE_OP")
@@ -168,6 +167,7 @@ bool EthercatBusBase::startup(const bool sizeCheck) {
   // Note: ecx_config_map_group(..) requests the slaves to go to SAFE-OP.
   int ioMapSize = ecx_config_map_group(&ecatContext_, &ioMap_, 0);
   MELO_DEBUG_STREAM("Configured ioMap with size: " << ioMapSize)
+  (void)ioMapSize;
 
   // Check if the size of the IO mapping fits our slaves.
   bool ioMapIsOk = true;
@@ -304,6 +304,8 @@ void EthercatBusBase::setState(const uint16_t state, const uint16_t slave) {
 
 bool EthercatBusBase::waitForState(const uint16_t state, const uint16_t slave, const unsigned int maxRetries, const double retrySleep) {
   assert(static_cast<int>(slave) <= getNumberOfSlaves());
+  (void)retrySleep;
+
   uint16_t returnedState = 0;
   std::lock_guard<std::recursive_mutex> guard(contextMutex_);
   for (unsigned int retry = 0; retry <= maxRetries; retry++) {

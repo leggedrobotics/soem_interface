@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake/Modules")
 project(soem_rsl C)
 
-find_package(ament_cmake REQUIRED)
+find_package(catkin REQUIRED)
 
 if(WIN32)
   set(OS "win32")
@@ -44,11 +44,16 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "rtems")
 endif()
 
 message("OS is ${OS}")
-set(INCLUDE_DIRS ./soem
+
+
+catkin_package(
+   INCLUDE_DIRS
+        ./soem
         ./soem/soem
         ./soem/osal
         ./soem/osal/${OS}
-        ./soem/oshw/${OS})
+        ./soem/oshw/${OS}
+   LIBRARIES soem)
 
 set(SOEM_INCLUDE_INSTALL_DIR include/soem)
 set(SOEM_LIB_INSTALL_DIR lib)
@@ -73,7 +78,6 @@ add_library(soem STATIC
   ${OSHW_EXTRA_SOURCES})
 target_link_libraries(soem ${OS_LIBS})
 set_target_properties (soem PROPERTIES POSITION_INDEPENDENT_CODE ON)
-ament_export_libraries(soem)
 
 target_include_directories(soem PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/soem/soem>
@@ -110,7 +114,6 @@ install(FILES
   DESTINATION ${CMAKE_INSTALL_PREFIX}/include
 )
 
-ament_export_include_directories(include)
 #message(${CMAKE_INSTALL_PREFIX})
 #add_custom_target(link_target ALL
  #                 COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_INSTALL_PREFIX}/include/soem/ethercattype.h ${CMAKE_INSTALL_PREFIX}/include/ethercattype.h
@@ -121,5 +124,3 @@ if(BUILD_TESTS)
   add_subdirectory(soem/test/linux/eepromtool)
   add_subdirectory(soem/test/linux/simple_test)
 endif()
-
-ament_package()

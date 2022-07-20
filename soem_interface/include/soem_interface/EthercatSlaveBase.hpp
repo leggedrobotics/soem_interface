@@ -228,47 +228,58 @@ class EthercatSlaveBase {
   }
 
   virtual bool sendSdoWriteInt8(const uint16_t index, const uint8_t subindex, const bool completeAccess, const int8_t value) {
+    (void)completeAccess;
     return sendSdoWrite(index, subindex, false, value);
   }
 
   virtual bool sendSdoWriteInt16(const uint16_t index, const uint8_t subindex, const bool completeAccess, const int16_t value) {
+    (void)completeAccess;
     return sendSdoWrite(index, subindex, false, value);
   }
 
   virtual bool sendSdoWriteInt32(const uint16_t index, const uint8_t subindex, const bool completeAccess, const int32_t value) {
+    (void)completeAccess;
     return sendSdoWrite(index, subindex, false, value);
   }
 
   virtual bool sendSdoWriteInt64(const uint16_t index, const uint8_t subindex, const bool completeAccess, const int64_t value) {
+    (void)completeAccess;
     return sendSdoWrite(index, subindex, false, value);
   }
 
   virtual bool sendSdoWriteUInt8(const uint16_t index, const uint8_t subindex, const bool completeAccess, const uint8_t value) {
+    (void)completeAccess;
     return sendSdoWrite(index, subindex, false, value);
   }
 
   virtual bool sendSdoWriteUInt16(const uint16_t index, const uint8_t subindex, const bool completeAccess, const uint16_t value) {
+    (void)completeAccess;
     return sendSdoWrite(index, subindex, false, value);
   }
 
   virtual bool sendSdoWriteUInt32(const uint16_t index, const uint8_t subindex, const bool completeAccess, const uint32_t value) {
+    (void)completeAccess;
     return sendSdoWrite(index, subindex, false, value);
   }
 
   virtual bool sendSdoWriteUInt64(const uint16_t index, const uint8_t subindex, const bool completeAccess, const uint64_t value) {
+    (void)completeAccess;
     return sendSdoWrite(index, subindex, false, value);
   }
 
   virtual bool sendSdoWriteFloat(const uint16_t index, const uint8_t subindex, const bool completeAccess, const float value) {
+    (void)completeAccess;
     return sendSdoWrite(index, subindex, false, value);
   }
 
   virtual bool sendSdoWriteDouble(const uint16_t index, const uint8_t subindex, const bool completeAccess, const double value) {
+    (void)completeAccess;
     return sendSdoWrite(index, subindex, false, value);
   }
 
   virtual bool sendSdoWriteString(const uint16_t index, const uint8_t subindex, const bool completeAccess, const std::string value) {
-      return sendSdoWrite(index, subindex, false, value);
+    (void)completeAccess;
+    return sendSdoWrite(index, subindex, false, value);
   }
 
  protected:
