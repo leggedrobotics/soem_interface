@@ -292,10 +292,10 @@ void EthercatBusBase::shutdown() {
 
 void EthercatBusBase::setState(const uint16_t state, const uint16_t slave) {
   std::lock_guard<std::recursive_mutex> guard(contextMutex_);
-//  if(!initlialized_) {
-//    MELO_ERROR_STREAM("Bus " << name_ << " was not successfully initialized, skipping operation");
-//    return;
-//  }
+  if(!initlialized_) {
+    MELO_WARN_STREAM("[EcatBus setState] Bus " << name_ << " was not successfully initialized, skipping operation");
+    return;
+  }
   assert(static_cast<int>(slave) <= getNumberOfSlaves());
   ecatContext_.slavelist[slave].state = state;
   ecx_writestate(&ecatContext_, slave);
