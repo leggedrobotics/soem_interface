@@ -150,7 +150,7 @@ class EthercatSlaveBase {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     const bool success = bus_->sendSdoRead(address_, index, subindex, completeAccess, value);
     if(!success) {
-      MELO_ERROR_STREAM("Error reading SDO.\tAddress: " << address_ << "Index: " << (int)index
+      MELO_ERROR_STREAM("Error reading SDO.\tAddress: " << address_ << " Index: " << (int)index
                         << "\nSubindex: " << (int)subindex << "\n Complete Access: "
                         << (int)completeAccess << "\nType: " << typeid(value).name());
     }

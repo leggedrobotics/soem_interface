@@ -150,6 +150,7 @@ bool EthercatBusBase::startup(const bool sizeCheck) {
   ecatContext_.grouplist[0].blockLRW = 1;
 
   //some slave might require SAFE_OP during setup...
+  initlialized_ = true;
   setState(EC_STATE_PRE_OP);
   waitForState(EC_STATE_PRE_OP,0);
 //  MELO_DEBUG_STREAM("[EthercatBus] Bus Startup: Set all salves to SAFE_OP")
@@ -202,7 +203,6 @@ bool EthercatBusBase::startup(const bool sizeCheck) {
   }
 
   workingCounterTooLowCounter_ = 0;
-  initlialized_ = true;
 
   return true;
 }
