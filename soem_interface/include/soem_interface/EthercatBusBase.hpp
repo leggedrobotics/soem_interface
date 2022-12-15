@@ -155,12 +155,22 @@ class EthercatBusBase {
   bool waitForState(const uint16_t state, const uint16_t slave = 0, const unsigned int maxRetries = 40, const double retrySleep = 0.001);
 
   /*!
-   * Reads the ethercat state machine state
+   * Reads the ethercat state machine state, updates the state information of all slaves.
+   * Therefore reads all slaves in case not all slaves are in the same state.
    * @param slave address of the slave, 0 for the lowest state of all slaves
    * @return ecat sm state (EC_STATE_...) of the slave.
    */
 
   int getState(const uint16_t slave = 0);
+
+  /*!
+   * Checks if all slaves are in EC_STATE_OPERATIONAL, therefore reads EC state from all slaves!
+   * If not does some basic printing for potential debugging.
+   * @param tryToRecoverLostSlaves tries to recover a lost slave. NOT IMPLEMENTED:
+   * @return true if all fine = all slaves in EC_STATE_OP
+   */
+  bool doBusMonitoring(bool tryToRecoverLostSlaves=false);
+
 
   /*!
    * Generate and return the error string.

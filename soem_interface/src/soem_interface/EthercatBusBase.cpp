@@ -149,6 +149,8 @@ bool EthercatBusBase::startup(const bool sizeCheck) {
   // Disable symmetrical transfers.
   ecatContext_.grouplist[0].blockLRW = 1;
 
+  //some slave might require SAFE_OP during setup...
+  initlialized_ = true;
   setState(EC_STATE_PRE_OP);
   waitForState(EC_STATE_PRE_OP,0);
 //  MELO_DEBUG_STREAM("[EthercatBus] Bus Startup: Set all salves to SAFE_OP")
@@ -167,7 +169,6 @@ bool EthercatBusBase::startup(const bool sizeCheck) {
   // Note: ecx_config_map_group(..) requests the slaves to go to SAFE-OP.
   int ioMapSize = ecx_config_map_group(&ecatContext_, &ioMap_, 0);
   MELO_DEBUG_STREAM("Configured ioMap with size: " << ioMapSize)
-  (void)ioMapSize;
 
   // Check if the size of the IO mapping fits our slaves.
   bool ioMapIsOk = true;
@@ -202,7 +203,6 @@ bool EthercatBusBase::startup(const bool sizeCheck) {
   }
 
   workingCounterTooLowCounter_ = 0;
-  initlialized_ = true;
 
   return true;
 }
@@ -224,21 +224,21 @@ void EthercatBusBase::updateRead() {
   //! Check the working counter.
   if (!workingCounterIsOk()) {
     ++workingCounterTooLowCounter_;
-    std::lock_guard<std::recursive_mutex> guard(contextMutex_);
-    uint16 returnedState = ecx_readstate(&ecatContext_);
-    if(returnedState != EC_STATE_OPERATIONAL){
-      MELO_DEBUG_STREAM("[EthercatBusBase] at least one slave not in OP state.")
-    }
-    MELO_DEBUG_STREAM("[EthercatBusBase] Minimum returned state " << returnedState );
-    MELO_DEBUG_STREAM("[SOEM_Interface] slave: " << 0 << " alStatusCode: 0x" << std::setfill('0') <<
-                                                std::setw(8) << std::hex << ecatContext_.slavelist[0].ALstatuscode <<
-                                                " " << ec_ALstatuscode2string(ecatContext_.slavelist[0].ALstatuscode));
+    MELO_DEBUG_STREAM("Working counter too low counter: " << workingCounterTooLowCounter_)
+    MELO_DEBUG_THROTTLE_STREAM(1.0, "Update Read:" << this);
+    MELO_WARN_STREAM("Working counter is too low: " << wkc_.load() << " < " << getExpectedWorkingCounter() << ", wkc's to low in a row: " << workingCounterTooLowCounter_);
     if (!busIsOk()) {
       MELO_WARN_THROTTLE_STREAM(1.0, "Bus is not ok. Too many working counter too low in a row: " << workingCounterTooLowCounter_)
     }
-    MELO_DEBUG_STREAM("Working counter too low counter: " << workingCounterTooLowCounter_)
-    MELO_WARN_THROTTLE_STREAM(1.0, "Update Read:" << this);
-    MELO_WARN_THROTTLE_STREAM(1.0, "Working counter is too low: " << wkc_.load() << " < " << getExpectedWorkingCounter());
+    std::lock_guard<std::recursive_mutex> guard(contextMutex_);
+//    uint16 returnedState = ecx_readstate(&ecatContext_); //this might kill the bus in case of many slaves & not all in same state.
+//    if(returnedState != EC_STATE_OPERATIONAL){
+//      MELO_WARN_STREAM("[EthercatBusBase] at least one slave not in OP state.")
+//    }
+//    MELO_WARN_STREAM("[EthercatBusBase] Minimum returned state " << returnedState );
+    MELO_WARN_STREAM("[SOEM_Interface] slave: " << 0 << " alStatusCode: 0x" << std::setfill('0') <<
+                                                std::setw(8) << std::hex << ecatContext_.slavelist[0].ALstatuscode <<
+                                                " " << ec_ALstatuscode2string(ecatContext_.slavelist[0].ALstatuscode));
     return;
   }
   // Reset working counter too low counter.
@@ -304,8 +304,6 @@ void EthercatBusBase::setState(const uint16_t state, const uint16_t slave) {
 
 bool EthercatBusBase::waitForState(const uint16_t state, const uint16_t slave, const unsigned int maxRetries, const double retrySleep) {
   assert(static_cast<int>(slave) <= getNumberOfSlaves());
-  (void)retrySleep;
-
   uint16_t returnedState = 0;
   std::lock_guard<std::recursive_mutex> guard(contextMutex_);
   for (unsigned int retry = 0; retry <= maxRetries; retry++) {
@@ -329,7 +327,7 @@ bool EthercatBusBase::waitForState(const uint16_t state, const uint16_t slave, c
     }
     returnedState = ecx_statecheck(&ecatContext_, slave, state, timeout);
     if (returnedState == state) {
-      MELO_DEBUG_STREAM("[SOEM_Interface] Slave: " << slave << ": State " << state << " has been reached after " << retry << " tries");
+      MELO_INFO_STREAM("[SOEM_Interface] Slave: " << slave << ": State " << state << " has been reached after " << retry << " tries");
       return true;
     }
   }
@@ -387,7 +385,7 @@ std::string EthercatBusBase::getErrorString(ec_errort error) {
 void EthercatBusBase::printALStatus(const uint16_t slave) {
   std::lock_guard<std::recursive_mutex> guard(contextMutex_);
   assert(static_cast<int>(slave) <= getNumberOfSlaves());
-  MELO_ERROR_STREAM("Slave " << slave << " in ecat sm state: " << getState(slave))
+  MELO_ERROR_STREAM("Slave " << slave << " latest read ecat sm state: " << ecatContext_.slavelist[slave].state)
   MELO_INFO_STREAM("[SOEM_Interface] slave: " << slave << " alStatusCode: 0x" << std::setfill('0') <<
                    std::setw(8) << std::hex << ecatContext_.slavelist[slave].ALstatuscode <<
                    " " << ec_ALstatuscode2string(ecatContext_.slavelist[slave].ALstatuscode));
@@ -444,6 +442,36 @@ int EthercatBusBase::getState(const uint16_t slave) {
     return lowest_state;
   }
   return static_cast<int>(ecatContext_.slavelist[slave].state);
+}
+
+bool EthercatBusBase::doBusMonitoring(bool tryToRecoverLostSlaves) {
+  bool allFine = true;
+  //read all the states from all slaves.
+  int lowestSlaveState = getState(0);
+  //can we do more than looking on the state machine? error counters would be interessting but needs very raw impl...
+
+  std::lock_guard<std::recursive_mutex> guard(contextMutex_);
+  if(lowestSlaveState < EC_STATE_OPERATIONAL){
+    for (const auto& slave : slaves_) {
+      assert(static_cast<int>(slave->getAddress()) <= getNumberOfSlaves());
+      if(ecatContext_.slavelist[slave->getAddress()].state < EC_STATE_OPERATIONAL){
+        MELO_ERROR_STREAM("[EthercatBus::BusMonitoring] Slave: " << slave->getName() << " not in EC Op state")
+        printALStatus(slave->getAddress());
+        //we can do more here.
+
+        if(ecatContext_.slavelist[slave->getAddress()].state == EC_STATE_NONE && !ecatContext_.slavelist[slave->getAddress()].islost){
+            ecatContext_.slavelist[slave->getAddress()].islost = TRUE;
+            MELO_ERROR_STREAM("[EthercatBus::BusMonitoring] Slave: " << slave->getName() << " no valid state read - slave lost!")
+            if(tryToRecoverLostSlaves){
+              MELO_ERROR_STREAM("[EthercatBus::BusMonitoring] Trying to recover the lost slave. !NOT IMPLEMENTED! example: in soem simple_test.c")
+              //todo
+            }
+        }
+      }
+    }
+    allFine = false;
+  }
+  return allFine;
 }
 
 template<>
