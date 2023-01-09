@@ -31,12 +31,20 @@ EthercatSlaveBase::EthercatSlaveBase() : bus_(nullptr), address_(0) {}
 
 bool EthercatSlaveBase::sendSdoReadGeneric(const std::string& indexString, const std::string& subindexString,
                                            const std::string& valueTypeString, std::string& valueString) {
+  (void)indexString;
+  (void)subindexString;
+  (void)valueTypeString;
+  (void)valueString;
   printWarnNotImplemented();
   return false;
 }
 
 bool EthercatSlaveBase::sendSdoWriteGeneric(const std::string& indexString, const std::string& subindexString,
                                             const std::string& valueTypeString, const std::string& valueString) {
+  (void)indexString;
+  (void)subindexString;
+  (void)valueTypeString;
+  (void)valueString;
   printWarnNotImplemented();
   return false;
 }

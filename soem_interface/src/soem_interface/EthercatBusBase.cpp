@@ -167,7 +167,7 @@ bool EthercatBusBase::startup(const bool sizeCheck) {
 
   // Set up the communication IO mapping.
   // Note: ecx_config_map_group(..) requests the slaves to go to SAFE-OP.
-  int ioMapSize = ecx_config_map_group(&ecatContext_, &ioMap_, 0);
+  [[maybe_unused]] int ioMapSize = ecx_config_map_group(&ecatContext_, &ioMap_, 0);
   MELO_DEBUG_STREAM("Configured ioMap with size: " << ioMapSize)
 
   // Check if the size of the IO mapping fits our slaves.
@@ -303,6 +303,7 @@ void EthercatBusBase::setState(const uint16_t state, const uint16_t slave) {
 }
 
 bool EthercatBusBase::waitForState(const uint16_t state, const uint16_t slave, const unsigned int maxRetries, const double retrySleep) {
+  (void)retrySleep;
   assert(static_cast<int>(slave) <= getNumberOfSlaves());
   uint16_t returnedState = 0;
   std::lock_guard<std::recursive_mutex> guard(contextMutex_);
