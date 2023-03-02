@@ -53,7 +53,9 @@ catkin_package(
         ./soem/osal
         ./soem/osal/${OS}
         ./soem/oshw/${OS}
-   LIBRARIES soem)
+   LIBRARIES
+        soem
+        ${OS_LIBS})
 
 set(SOEM_INCLUDE_INSTALL_DIR include/soem)
 set(SOEM_LIB_INSTALL_DIR lib)
