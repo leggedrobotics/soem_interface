@@ -4,9 +4,9 @@
 ** Tom Lankhorst, Samuel Bachmann, Gabriel Hottiger, Lennert Nachtigall,
 ** Mario Mauerer, Remo Diethelm
 **
-** This file is part of the soem_interface.
+** This file is part of the soem_interface_rsl.
 **
-** The soem_interface is free software: you can redistribute it and/or modify
+** The soem_interface_rsl is free software: you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
 ** the Free Software Foundation, either version 3 of the License, or
 ** (at your option) any later version.
@@ -17,8 +17,8 @@
 ** GNU General Public License for more details.
 **
 ** You should have received a copy of the GNU General Public License
-** along with the soem_interface.  If not, see <https://www.gnu.org/licenses/>.
- */
+** along with the soem_interface_rsl.  If not, see <https://www.gnu.org/licenses/>.
+*/
 
 #pragma once
 
@@ -31,11 +31,10 @@
 // message_logger
 #include <message_logger/message_logger.hpp>
 
-// soem_interface
-#include <soem_interface/EthercatBusBase.hpp>
+// soem_interface_rsl
+#include <soem_interface_rsl/EthercatBusBase.hpp>
 
-namespace soem_interface {
-
+namespace soem_interface_rsl {
 
 /**
  * @brief      Base class for generic ethercat slaves using soem
@@ -103,12 +102,12 @@ class EthercatSlaveBase {
   /**
    * @brief      Set EthercatBusBase pointer
    */
-  void setEthercatBusBasePointer(EthercatBusBase* bus){bus_ = bus;}
+  void setEthercatBusBasePointer(EthercatBusBase* bus) { bus_ = bus; }
 
   /**
    * @brief      Set physical EtherCAT address
    */
-  void setEthercatAddress(uint32_t address){address_ = address;}
+  void setEthercatAddress(uint32_t address) { address_ = address; }
 
   /**
    * @brief      Returns the bus address of the slave
@@ -128,11 +127,11 @@ class EthercatSlaveBase {
   template <typename Value>
   bool sendSdoWrite(const uint16_t index, const uint8_t subindex, const bool completeAccess, const Value value) {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
-    const bool success =  bus_->sendSdoWrite(address_, index, subindex, completeAccess, value);
-    if(!success) {
-      MELO_ERROR_STREAM("Error writing SDO.\tAddress: " << address_ << "Index: " << (int)index
-                        << "\nSubindex: " << (int)subindex << "\n Complete Access: "
-                        << (int)completeAccess << "\nType: " << typeid(value).name());
+    const bool success = bus_->sendSdoWrite(address_, index, subindex, completeAccess, value);
+    if (!success) {
+      MELO_ERROR_STREAM("Error writing SDO.\tAddress: " << address_ << "Index: " << (int)index << "\nSubindex: " << (int)subindex
+                                                        << "\n Complete Access: " << (int)completeAccess
+                                                        << "\nType: " << typeid(value).name());
     }
     return success;
   }
@@ -149,10 +148,10 @@ class EthercatSlaveBase {
   bool sendSdoRead(const uint16_t index, const uint8_t subindex, const bool completeAccess, Value& value) {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     const bool success = bus_->sendSdoRead(address_, index, subindex, completeAccess, value);
-    if(!success) {
-      MELO_ERROR_STREAM("Error reading SDO.\tAddress: " << address_ << "Index: " << (int)index
-                        << "\nSubindex: " << (int)subindex << "\n Complete Access: "
-                        << (int)completeAccess << "\nType: " << typeid(value).name());
+    if (!success) {
+      MELO_ERROR_STREAM("Error reading SDO.\tAddress: " << address_ << "Index: " << (int)index << "\nSubindex: " << (int)subindex
+                                                        << "\n Complete Access: " << (int)completeAccess
+                                                        << "\nType: " << typeid(value).name());
     }
     return success;
   }
@@ -268,7 +267,7 @@ class EthercatSlaveBase {
   }
 
   virtual bool sendSdoWriteString(const uint16_t index, const uint8_t subindex, const bool completeAccess, const std::string value) {
-      return sendSdoWrite(index, subindex, false, value);
+    return sendSdoWrite(index, subindex, false, value);
   }
 
  protected:
@@ -280,11 +279,11 @@ class EthercatSlaveBase {
   // Mutex prohibiting simultaneous access to EtherCAT slave.
   mutable std::recursive_mutex mutex_;
   // Non owning pointer to the ethercat bus
-    EthercatBusBase* bus_{nullptr};
+  EthercatBusBase* bus_{nullptr};
   // The bus address
   uint32_t address_{0};
 };
 
 using EthercatSlaveBasePtr = std::shared_ptr<EthercatSlaveBase>;
 
-}  // namespace soem_interface
+}  // namespace soem_interface_rsl

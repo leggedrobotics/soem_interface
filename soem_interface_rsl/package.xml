@@ -21,11 +21,12 @@ You should have received a copy of the GNU General Public License
 along with the soem_interface_rsl.  If not, see<https://www.gnu.org/licenses/>
 .
 <-->
+
   <package format="2">
 
-    <name>soem_interface_examples</name>
+    <name>soem_interface_rsl</name>
     <version>0.4.0</version>
-    <description>Examples on how to use the soem_interface_rsl package.</description>
+    <description>C++ library to create multiple ethercat devices on one or multiple buses. Contains abstract base classes for the communication interface.</description>
 
     <license>GPLv3</license>
 
@@ -34,11 +35,11 @@ along with the soem_interface_rsl.  If not, see<https://www.gnu.org/licenses/>
     <author email="johannes.pankert@mavt.ethz.ch">Johannes Pankert</author>
     <author>Lennart Nachtigall</author>
 
+
     <maintainer email="pankertj@ethz.ch">Johannes Pankert</maintainer>
 
     <buildtool_depend>catkin</buildtool_depend>
     <depend>message_logger</depend>
     <depend>soem_rsl</depend>
-    <depend>soem_interface_rsl</depend>
 
   </package>

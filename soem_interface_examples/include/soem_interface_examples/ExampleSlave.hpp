@@ -4,9 +4,9 @@
 ** Tom Lankhorst, Samuel Bachmann, Gabriel Hottiger, Lennert Nachtigall,
 ** Mario Mauerer, Remo Diethelm
 **
-** This file is part of the soem_interface.
+** This file is part of the soem_interface_rsl.
 **
-** The soem_interface is free software: you can redistribute it and/or modify
+** The soem_interface_rsl is free software: you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
 ** the Free Software Foundation, either version 3 of the License, or
 ** (at your option) any later version.
@@ -17,13 +17,13 @@
 ** GNU General Public License for more details.
 **
 ** You should have received a copy of the GNU General Public License
-** along with the soem_interface.  If not, see <https://www.gnu.org/licenses/>.
+** along with the soem_interface_rsl.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #pragma once
 
-#include <soem_interface/EthercatBusBase.hpp>
-#include <soem_interface/EthercatSlaveBase.hpp>
+#include <soem_interface_rsl/EthercatBusBase.hpp>
+#include <soem_interface_rsl/EthercatSlaveBase.hpp>
 
 #define RX_PDO_ID 0x6000
 #define TX_PDO_ID 0x7000
@@ -42,9 +42,9 @@ struct RxPdo {
 } __attribute__((packed));
 
 
-class ExampleSlave : public soem_interface::EthercatSlaveBase {
+class ExampleSlave : public soem_interface_rsl::EthercatSlaveBase {
 public:
-  ExampleSlave(const std::string& name, soem_interface::EthercatBusBase* bus, const uint32_t address);
+  ExampleSlave(const std::string& name, soem_interface_rsl::EthercatBusBase* bus, const uint32_t address);
   ~ExampleSlave() override = default;
 
   std::string getName() const override {

@@ -4,9 +4,9 @@
 ** Tom Lankhorst, Samuel Bachmann, Gabriel Hottiger, Lennert Nachtigall,
 ** Mario Mauerer, Remo Diethelm
 **
-** This file is part of the soem_interface.
+** This file is part of the soem_interface_rsl.
 **
-** The soem_interface is free software: you can redistribute it and/or modify
+** The soem_interface_rsl is free software: you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
 ** the Free Software Foundation, either version 3 of the License, or
 ** (at your option) any later version.
@@ -17,15 +17,15 @@
 ** GNU General Public License for more details.
 **
 ** You should have received a copy of the GNU General Public License
-** along with the soem_interface.  If not, see <https://www.gnu.org/licenses/>.
+** along with the soem_interface_rsl.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 //  anydrive
-#include "soem_interface/EthercatBusManagerBase.hpp"
+#include "soem_interface_rsl/EthercatBusManagerBase.hpp"
 
-namespace soem_interface {
+namespace soem_interface_rsl {
 
-bool EthercatBusManagerBase::addEthercatBus(soem_interface::EthercatBusBase* bus) {
+bool EthercatBusManagerBase::addEthercatBus(soem_interface_rsl::EthercatBusBase* bus) {
   if (bus == nullptr) {
     MELO_ERROR_STREAM("[RokubiminiEthercatBusManager::addEthercatBus] bus is nullptr")
     return false;
@@ -34,14 +34,14 @@ bool EthercatBusManagerBase::addEthercatBus(soem_interface::EthercatBusBase* bus
   std::lock_guard<std::recursive_mutex> lock(busMutex_);
   const auto& it = buses_.find(bus->getName());
   if (it == buses_.end()) {
-    buses_.insert(std::make_pair(bus->getName(), std::unique_ptr<soem_interface::EthercatBusBase>(bus)));
+    buses_.insert(std::make_pair(bus->getName(), std::unique_ptr<soem_interface_rsl::EthercatBusBase>(bus)));
     return true;
   } else {
     return false;
   }
 }
 
-bool EthercatBusManagerBase::addEthercatBus(std::unique_ptr<soem_interface::EthercatBusBase> bus) {
+bool EthercatBusManagerBase::addEthercatBus(std::unique_ptr<soem_interface_rsl::EthercatBusBase> bus) {
   if (bus == nullptr) {
     MELO_ERROR_STREAM("[RokubiminiEthercatBusManager::addEthercatBus] bus is nullptr")
     return false;
@@ -87,23 +87,16 @@ void EthercatBusManagerBase::setBussesSafeOperational() {
   }
 }
 
-void EthercatBusManagerBase::waitForState(
-  const uint16_t state,
-  const uint16_t slave,
-  const std::string busName,
-  const unsigned int maxRetries,
-  const double retrySleep) {
-
+void EthercatBusManagerBase::waitForState(const uint16_t state, const uint16_t slave, const std::string busName,
+                                          const unsigned int maxRetries, const double retrySleep) {
   std::lock_guard<std::recursive_mutex> lock(busMutex_);
-  if(busName.empty()) {
+  if (busName.empty()) {
     for (auto& bus : buses_) {
       bus.second->waitForState(state, slave, maxRetries, retrySleep);
     }
-  }
-  else {
+  } else {
     buses_.at(busName)->waitForState(state, slave, maxRetries, retrySleep);
   }
-
 }
 
 bool EthercatBusManagerBase::startupCommunication() {
@@ -147,7 +140,7 @@ std::unique_ptr<EthercatBusBase> EthercatBusManagerBase::extractBusByName(const 
 EthercatBusManagerBase::BusMap EthercatBusManagerBase::extractBuses() {
   BusMap busMapOut;
 
-  for(auto& bus : buses_) {
+  for (auto& bus : buses_) {
     busMapOut.insert(std::make_pair(bus.first, std::move(bus.second)));
   }
 
@@ -164,4 +157,4 @@ bool EthercatBusManagerBase::allBusesAreOk() {
   return true;
 }
 
-}  // namespace soem_interface
+}  // namespace soem_interface_rsl

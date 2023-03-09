@@ -4,9 +4,9 @@
 ** Tom Lankhorst, Samuel Bachmann, Gabriel Hottiger, Lennert Nachtigall,
 ** Mario Mauerer, Remo Diethelm
 **
-** This file is part of the soem_interface.
+** This file is part of the soem_interface_rsl.
 **
-** The soem_interface is free software: you can redistribute it and/or modify
+** The soem_interface_rsl is free software: you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
 ** the Free Software Foundation, either version 3 of the License, or
 ** (at your option) any later version.
@@ -17,8 +17,8 @@
 ** GNU General Public License for more details.
 **
 ** You should have received a copy of the GNU General Public License
-** along with the soem_interface.  If not, see <https://www.gnu.org/licenses/>.
- */
+** along with the soem_interface_rsl.  If not, see <https://www.gnu.org/licenses/>.
+*/
 
 #pragma once
 
@@ -27,9 +27,9 @@
 #include <memory>
 #include <mutex>
 
-#include <soem_interface/EthercatBusBase.hpp>
+#include <soem_interface_rsl/EthercatBusBase.hpp>
 
-namespace soem_interface {
+namespace soem_interface_rsl {
 
 /**
  * @brief      Class for managing multiple ethercat busses
@@ -49,7 +49,7 @@ class EthercatBusManagerBase {
    *
    * @return     True if bus has been added successfully
    */
-  bool addEthercatBus(soem_interface::EthercatBusBase* bus);
+  bool addEthercatBus(soem_interface_rsl::EthercatBusBase* bus);
 
   /**
    * @brief      Adds an ethercat bus to the manager. The manager takes
@@ -59,7 +59,7 @@ class EthercatBusManagerBase {
    *
    * @return     True if bus has been added successfully
    */
-  bool addEthercatBus(std::unique_ptr<soem_interface::EthercatBusBase> bus);
+  bool addEthercatBus(std::unique_ptr<soem_interface_rsl::EthercatBusBase> bus);
 
   /**
    * @brief      Starts up all busses and puts them in operational mode
@@ -99,12 +99,8 @@ class EthercatBusManagerBase {
    * @param[in]  maxRetries  The maximum retries
    * @param[in]  retrySleep  The retry sleep
    */
-  void waitForState(
-    const uint16_t state,
-    const uint16_t slave = 0,
-    const std::string busName = "",
-    const unsigned int maxRetries = 40,
-    const double retrySleep = 0.001);
+  void waitForState(const uint16_t state, const uint16_t slave = 0, const std::string busName = "", const unsigned int maxRetries = 40,
+                    const double retrySleep = 0.001);
 
   /**
    * @brief      Calls update read on all busses
@@ -163,4 +159,4 @@ class EthercatBusManagerBase {
 
 using EthercatBusManagerBasePtr = std::shared_ptr<EthercatBusManagerBase>;
 
-}  // namespace soem_interface
+}  // namespace soem_interface_rsl

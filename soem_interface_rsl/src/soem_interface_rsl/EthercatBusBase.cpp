@@ -4,9 +4,9 @@
 ** Tom Lankhorst, Samuel Bachmann, Gabriel Hottiger, Lennert Nachtigall,
 ** Mario Mauerer, Remo Diethelm
 **
-** This file is part of the soem_interface.
+** This file is part of the soem_interface_rsl.
 **
-** The soem_interface is free software: you can redistribute it and/or modify
+** The soem_interface_rsl is free software: you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
 ** the Free Software Foundation, either version 3 of the License, or
 ** (at your option) any later version.
@@ -17,13 +17,13 @@
 ** GNU General Public License for more details.
 **
 ** You should have received a copy of the GNU General Public License
-** along with the soem_interface.  If not, see <https://www.gnu.org/licenses/>.
+** along with the soem_interface_rsl.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <soem_interface/EthercatBusBase.hpp>
-#include <soem_interface/EthercatSlaveBase.hpp>
+#include <soem_interface_rsl/EthercatBusBase.hpp>
+#include <soem_interface_rsl/EthercatSlaveBase.hpp>
 
-namespace soem_interface {
+namespace soem_interface_rsl {
 
 EthercatBusBase::EthercatBusBase(const std::string& name) : name_(name), wkc_(0) {
   // Initialize all SOEM context data pointers that are not used with null.
@@ -61,7 +61,9 @@ void EthercatBusBase::printAvailableBusses() {
   }
 }
 
-bool EthercatBusBase::busIsAvailable() const { return busIsAvailable(name_); }
+bool EthercatBusBase::busIsAvailable() const {
+  return busIsAvailable(name_);
+}
 
 int EthercatBusBase::getNumberOfSlaves() const {
   std::lock_guard<std::recursive_mutex> guard(contextMutex_);
@@ -116,7 +118,7 @@ bool EthercatBusBase::startup(const bool sizeCheck) {
       return false;
     }
     // Sleep and retry.
-    soem_interface::threadSleep(ecatConfigRetrySleep_);
+    soem_interface_rsl::threadSleep(ecatConfigRetrySleep_);
     MELO_INFO_STREAM("No slaves have been found, retrying " << retry + 1 << "/" << ecatConfigMaxRetries_ << " ...");
   }
 
@@ -268,7 +270,7 @@ void EthercatBusBase::shutdown() {
     MELO_INFO_STREAM("Closing socket ...");
     ecx_close(&ecatContext_);
     // Sleep to make sure the socket is closed, because ecx_close is non-blocking.
-    soem_interface::threadSleep(0.5);
+    soem_interface_rsl::threadSleep(0.5);
   }
 
   initlialized_ = false;
@@ -276,7 +278,7 @@ void EthercatBusBase::shutdown() {
 
 void EthercatBusBase::setState(const uint16_t state, const uint16_t slave) {
   std::lock_guard<std::recursive_mutex> guard(contextMutex_);
-  if(!initlialized_) {
+  if (!initlialized_) {
     MELO_ERROR_STREAM("Bus " << name_ << " was not successfully initialized, skipping operation");
     return;
   }
@@ -353,9 +355,9 @@ void EthercatBusBase::printALStatus(const uint16_t slave) {
   std::lock_guard<std::recursive_mutex> guard(contextMutex_);
   assert(static_cast<int>(slave) <= getNumberOfSlaves());
 
-  MELO_INFO_STREAM(" slave: " << slave << " alStatusCode: 0x" << std::setfill('0') <<
-                   std::setw(8) << std::hex << ecatContext_.slavelist[slave].ALstatuscode <<
-                   " " << ec_ALstatuscode2string(ecatContext_.slavelist[slave].ALstatuscode));
+  MELO_INFO_STREAM(" slave: " << slave << " alStatusCode: 0x" << std::setfill('0') << std::setw(8) << std::hex
+                              << ecatContext_.slavelist[slave].ALstatuscode << " "
+                              << ec_ALstatuscode2string(ecatContext_.slavelist[slave].ALstatuscode));
 }
 
 bool EthercatBusBase::checkForSdoErrors(const uint16_t slave, const uint16_t index) {
@@ -365,7 +367,7 @@ bool EthercatBusBase::checkForSdoErrors(const uint16_t slave, const uint16_t ind
       std::string errorStr = getErrorString(error);
       MELO_ERROR_STREAM(errorStr);
       if (error.Slave == slave && error.Index == index) {
-        soem_interface::common::MessageLog::insertMessage(message_logger::log::levels::Level::Error, errorStr);
+        soem_interface_rsl::common::MessageLog::insertMessage(message_logger::log::levels::Level::Error, errorStr);
         return true;
       }
     }
@@ -373,9 +375,13 @@ bool EthercatBusBase::checkForSdoErrors(const uint16_t slave, const uint16_t ind
   return false;
 }
 
-bool EthercatBusBase::workingCounterIsOk() const { return wkc_ >= getExpectedWorkingCounter(); }
+bool EthercatBusBase::workingCounterIsOk() const {
+  return wkc_ >= getExpectedWorkingCounter();
+}
 
-bool EthercatBusBase::busIsOk() const { return workingCounterTooLowCounter_ < maxWorkingCounterTooLow_; }
+bool EthercatBusBase::busIsOk() const {
+  return workingCounterTooLowCounter_ < maxWorkingCounterTooLow_;
+}
 
 void EthercatBusBase::syncDistributedClock0(const uint16_t slave, const bool activate, const double cycleTime, const double cycleShift) {
   MELO_INFO_STREAM("Bus '" << name_ << "', slave " << slave << ":  " << (activate ? "Activating" : "Deactivating")
@@ -402,54 +408,56 @@ EthercatBusBase::PdoSizePair EthercatBusBase::getHardwarePdoSizes(const uint16_t
   return std::make_pair(ecatContext_.slavelist[slave].Obytes, ecatContext_.slavelist[slave].Ibytes);
 }
 
-template<>
-bool EthercatBusBase::sendSdoRead<std::string>(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, std::string& value) {
-    assert(static_cast<int>(slave) <= getNumberOfSlaves());
-    //Expected length of the string. String needs to be preallocated
-    int size = value.length();
-    //Store for check at the end
-    int expected_size = size;
-    //Create buffer with the length of the string
-    char buffer[size];
-    int wkc = 0;
-    {
-      std::lock_guard<std::recursive_mutex> guard(contextMutex_);
-      wkc = ecx_SDOread(&ecatContext_, slave, index, subindex, static_cast<boolean>(completeAccess), &size, buffer, EC_TIMEOUTRXM);
-      //Convert read data to a std::string
-      value = std::string(buffer,size);
-    }
-    if (wkc <= 0) {
-      MELO_ERROR_STREAM("Slave " << slave << ": Working counter too low (" << wkc << ") for reading SDO (ID: 0x" << std::setfill('0')
-                                 << std::setw(4) << std::hex << index << ", SID 0x" << std::setfill('0') << std::setw(2) << std::hex
-                                 << static_cast<uint16_t>(subindex) << ").");
-      return false;
-    }
+template <>
+bool EthercatBusBase::sendSdoRead<std::string>(const uint16_t slave, const uint16_t index, const uint8_t subindex,
+                                               const bool completeAccess, std::string& value) {
+  assert(static_cast<int>(slave) <= getNumberOfSlaves());
+  // Expected length of the string. String needs to be preallocated
+  int size = value.length();
+  // Store for check at the end
+  int expected_size = size;
+  // Create buffer with the length of the string
+  char buffer[size];
+  int wkc = 0;
+  {
+    std::lock_guard<std::recursive_mutex> guard(contextMutex_);
+    wkc = ecx_SDOread(&ecatContext_, slave, index, subindex, static_cast<boolean>(completeAccess), &size, buffer, EC_TIMEOUTRXM);
+    // Convert read data to a std::string
+    value = std::string(buffer, size);
+  }
+  if (wkc <= 0) {
+    MELO_ERROR_STREAM("Slave " << slave << ": Working counter too low (" << wkc << ") for reading SDO (ID: 0x" << std::setfill('0')
+                               << std::setw(4) << std::hex << index << ", SID 0x" << std::setfill('0') << std::setw(2) << std::hex
+                               << static_cast<uint16_t>(subindex) << ").");
+    return false;
+  }
 
-    if (size != (int)expected_size) {
-      MELO_ERROR_STREAM("Slave " << slave << ": Size mismatch (expected " << expected_size << " bytes, read " << size
-                                 << " bytes) for reading SDO (ID: 0x" << std::setfill('0') << std::setw(4) << std::hex << index
-                                 << ", SID 0x" << std::setfill('0') << std::setw(2) << std::hex << static_cast<uint16_t>(subindex) << ").");
-      return false;
-    }
-    return true;
+  if (size != (int)expected_size) {
+    MELO_ERROR_STREAM("Slave " << slave << ": Size mismatch (expected " << expected_size << " bytes, read " << size
+                               << " bytes) for reading SDO (ID: 0x" << std::setfill('0') << std::setw(4) << std::hex << index << ", SID 0x"
+                               << std::setfill('0') << std::setw(2) << std::hex << static_cast<uint16_t>(subindex) << ").");
+    return false;
+  }
+  return true;
 }
 
-template<>
-bool EthercatBusBase::sendSdoWrite<std::string>(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, const std::string value) {
-    assert(static_cast<int>(slave) <= getNumberOfSlaves());
-    const int size = value.length();
-    const char* dataPtr = value.data();
-    int wkc = 0;
-    {
-        std::lock_guard<std::recursive_mutex> guard(contextMutex_);
-        wkc = ecx_SDOwrite(&ecatContext_, slave, index, subindex, static_cast<boolean>(completeAccess), size, &dataPtr, EC_TIMEOUTRXM);
-    }
-    if (wkc <= 0) {
-        MELO_ERROR_STREAM("Slave " << slave << ": Working counter too low (" << wkc << ") for writing SDO (ID: 0x" << std::setfill('0')
-                                   << std::setw(4) << std::hex << index << ", SID 0x" << std::setfill('0') << std::setw(2) << std::hex
-                                   << static_cast<uint16_t>(subindex) << ").");
-        return false;
-    }
-    return true;
+template <>
+bool EthercatBusBase::sendSdoWrite<std::string>(const uint16_t slave, const uint16_t index, const uint8_t subindex,
+                                                const bool completeAccess, const std::string value) {
+  assert(static_cast<int>(slave) <= getNumberOfSlaves());
+  const int size = value.length();
+  const char* dataPtr = value.data();
+  int wkc = 0;
+  {
+    std::lock_guard<std::recursive_mutex> guard(contextMutex_);
+    wkc = ecx_SDOwrite(&ecatContext_, slave, index, subindex, static_cast<boolean>(completeAccess), size, &dataPtr, EC_TIMEOUTRXM);
+  }
+  if (wkc <= 0) {
+    MELO_ERROR_STREAM("Slave " << slave << ": Working counter too low (" << wkc << ") for writing SDO (ID: 0x" << std::setfill('0')
+                               << std::setw(4) << std::hex << index << ", SID 0x" << std::setfill('0') << std::setw(2) << std::hex
+                               << static_cast<uint16_t>(subindex) << ").");
+    return false;
+  }
+  return true;
 }
-}  // namespace soem_interface
+}  // namespace soem_interface_rsl

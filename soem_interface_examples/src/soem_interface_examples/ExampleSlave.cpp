@@ -4,9 +4,9 @@
 ** Tom Lankhorst, Samuel Bachmann, Gabriel Hottiger, Lennert Nachtigall,
 ** Mario Mauerer, Remo Diethelm
 **
-** This file is part of the soem_interface.
+** This file is part of the soem_interface_rsl.
 **
-** The soem_interface is free software: you can redistribute it and/or modify
+** The soem_interface_rsl is free software: you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
 ** the Free Software Foundation, either version 3 of the License, or
 ** (at your option) any later version.
@@ -17,18 +17,15 @@
 ** GNU General Public License for more details.
 **
 ** You should have received a copy of the GNU General Public License
-** along with the soem_interface.  If not, see <https://www.gnu.org/licenses/>.
+** along with the soem_interface_rsl.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include <soem_interface_examples/ExampleSlave.hpp>
 
-
 namespace soem_interface_examples {
 
-ExampleSlave::ExampleSlave(const std::string& name, soem_interface::EthercatBusBase* bus, const uint32_t address) :
-soem_interface::EthercatSlaveBase(bus, address), 
-name_(name)
-{
+ExampleSlave::ExampleSlave(const std::string& name, soem_interface_rsl::EthercatBusBase* bus, const uint32_t address)
+    : soem_interface_rsl::EthercatSlaveBase(bus, address), name_(name) {
   pdoInfo_.rxPdoId_ = RX_PDO_ID;
   pdoInfo_.txPdoId_ = TX_PDO_ID;
   pdoInfo_.rxPdoSize_ = sizeof(command_);
@@ -53,4 +50,4 @@ void ExampleSlave::shutdown() {
   // Do nothing
 }
 
-}
+}  // namespace soem_interface_examples

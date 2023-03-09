@@ -4,9 +4,9 @@
 ** Tom Lankhorst, Samuel Bachmann, Gabriel Hottiger, Lennert Nachtigall,
 ** Mario Mauerer, Remo Diethelm
 **
-** This file is part of the soem_interface.
+** This file is part of the soem_interface_rsl.
 **
-** The soem_interface is free software: you can redistribute it and/or modify
+** The soem_interface_rsl is free software: you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
 ** the Free Software Foundation, either version 3 of the License, or
 ** (at your option) any later version.
@@ -17,13 +17,13 @@
 ** GNU General Public License for more details.
 **
 ** You should have received a copy of the GNU General Public License
-** along with the soem_interface.  If not, see <https://www.gnu.org/licenses/>.
- */
+** along with the soem_interface_rsl.  If not, see <https://www.gnu.org/licenses/>.
+*/
 
 #include <soem_interface_examples/ExampleSlave.hpp>
-#include <soem_interface/EthercatBusBase.hpp>
+#include <soem_interface_rsl/EthercatBusBase.hpp>
 
-// This shows a minimal example on how to use the soem_interface library. 
+// This shows a minimal example on how to use the soem_interface_rsl library.
 // Keep in mind that this is non-working example code, with only minimal error handling
 
 int main(int argc, char** argv) {
@@ -31,22 +31,21 @@ int main(int argc, char** argv) {
   const std::string slaveName = "ExampleSlave";
   const uint32_t slaveAddress = 0;
 
-  std::unique_ptr<soem_interface::EthercatBusBase> bus = std::make_unique<soem_interface::EthercatBusBase> (
-    busName);
+  std::unique_ptr<soem_interface_rsl::EthercatBusBase> bus = std::make_unique<soem_interface_rsl::EthercatBusBase>(busName);
 
-  std::shared_ptr<soem_interface_examples::ExampleSlave> slave = std::make_shared<soem_interface_examples::ExampleSlave> (
-    slaveName, bus.get(), slaveAddress);
+  std::shared_ptr<soem_interface_examples::ExampleSlave> slave =
+      std::make_shared<soem_interface_examples::ExampleSlave>(slaveName, bus.get(), slaveAddress);
 
   bus->addSlave(slave);
   bus->startup();
   bus->setState(EC_STATE_OPERATIONAL);
 
-  if(!bus->waitForState(EC_STATE_OPERATIONAL, slaveAddress)) {
+  if (!bus->waitForState(EC_STATE_OPERATIONAL, slaveAddress)) {
     // Something is wrong
     return 1;
   }
 
-  while(true) {
+  while (true) {
     bus->updateRead();
     bus->updateWrite();
   }

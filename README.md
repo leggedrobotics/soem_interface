@@ -4,7 +4,7 @@
 This software package serves as a C++ interface for one or more EtherCAT devices running on the same bus.
 The lower level EtherCAT communication is handled by the [SOEM](https://github.com/OpenEtherCATsociety/soem) library.
 
-The soem_interface has been developed on Ubuntu 18.04 LTS with ROS Melodic.
+The soem_interface_rsl has been developed on Ubuntu 18.04 LTS with ROS Melodic.
 
 The source code is released under the GPLv3 license.
 A copy of the license is available in the *COPYING* file.
@@ -37,13 +37,13 @@ To build the library from source, clone the latest version from this repository 
 
 	cd catkin_workspace/src
 	git clone https://github.com/leggedrobotics/message_logger.git
-	git clone https://github.com/leggedrobotics/soem_interface.git
+	git clone https://github.com/leggedrobotics/soem_interface_rsl.git
 	cd ../
-	catkin build soem_interface
+	catkin build soem_interface_rsl
 
 To build the examples, execute the following command inside of your catkin workspace:
 	
-	catkin build soem_interface_examples
+	catkin build soem_interface_rsl_examples
 	
 ## Classes
 
@@ -61,7 +61,7 @@ EthercatSlaves can be added with addSlave(). After all the slaves have been adde
 If multiple buses are connected to the same master then the buses are managed by the EthercatBusManagerBase.
 
 ## Note
-Due to the current pandemic we could not test this version of the soem_interface.
+Due to the current pandemic we could not test this version of the soem_interface_rsl.
 
 Tests will be conducted as soon as possible.
 

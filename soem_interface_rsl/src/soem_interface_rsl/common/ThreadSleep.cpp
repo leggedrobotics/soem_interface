@@ -4,9 +4,9 @@
 ** Tom Lankhorst, Samuel Bachmann, Gabriel Hottiger, Lennert Nachtigall,
 ** Mario Mauerer, Remo Diethelm
 **
-** This file is part of the soem_interface.
+** This file is part of the soem_interface_rsl.
 **
-** The soem_interface is free software: you can redistribute it and/or modify
+** The soem_interface_rsl is free software: you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
 ** the Free Software Foundation, either version 3 of the License, or
 ** (at your option) any later version.
@@ -17,15 +17,17 @@
 ** GNU General Public License for more details.
 **
 ** You should have received a copy of the GNU General Public License
-** along with the soem_interface.  If not, see <https://www.gnu.org/licenses/>.
+** along with the soem_interface_rsl.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <soem_interface/common/ThreadSleep.hpp>
+#include <soem_interface_rsl/common/ThreadSleep.hpp>
 
 #include <thread>
 
-namespace soem_interface {
+namespace soem_interface_rsl {
 
-void threadSleep(const double duration) { std::this_thread::sleep_for(std::chrono::nanoseconds(static_cast<int64_t>(1e9 * duration))); }
+void threadSleep(const double duration) {
+  std::this_thread::sleep_for(std::chrono::nanoseconds(static_cast<int64_t>(1e9 * duration)));
+}
 
-}  // namespace soem_interface
+}  // namespace soem_interface_rsl

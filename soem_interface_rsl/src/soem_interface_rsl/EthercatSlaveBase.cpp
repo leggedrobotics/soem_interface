@@ -4,9 +4,9 @@
 ** Tom Lankhorst, Samuel Bachmann, Gabriel Hottiger, Lennert Nachtigall,
 ** Mario Mauerer, Remo Diethelm
 **
-** This file is part of the soem_interface.
+** This file is part of the soem_interface_rsl.
 **
-** The soem_interface is free software: you can redistribute it and/or modify
+** The soem_interface_rsl is free software: you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
 ** the Free Software Foundation, either version 3 of the License, or
 ** (at your option) any later version.
@@ -17,17 +17,16 @@
 ** GNU General Public License for more details.
 **
 ** You should have received a copy of the GNU General Public License
-** along with the soem_interface.  If not, see <https://www.gnu.org/licenses/>.
+** along with the soem_interface_rsl.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-//  soem_interface
-#include <soem_interface/EthercatSlaveBase.hpp>
+//  soem_interface_rsl
+#include <soem_interface_rsl/EthercatSlaveBase.hpp>
 
-namespace soem_interface {
+namespace soem_interface_rsl {
 
 EthercatSlaveBase::EthercatSlaveBase(EthercatBusBase* bus, const uint32_t address) : bus_(bus), address_(address) {}
 EthercatSlaveBase::EthercatSlaveBase() : bus_(nullptr), address_(0) {}
-
 
 bool EthercatSlaveBase::sendSdoReadGeneric(const std::string& indexString, const std::string& subindexString,
                                            const std::string& valueTypeString, std::string& valueString) {
@@ -46,4 +45,4 @@ bool EthercatSlaveBase::sendSdoReadVisibleString(const uint16_t index, const uin
   return bus_->sendSdoReadVisibleString(address_, index, subindex, value);
 }
 
-}  // namespace soem_interface
+}  // namespace soem_interface_rsl

@@ -4,9 +4,9 @@
 ** Tom Lankhorst, Samuel Bachmann, Gabriel Hottiger, Lennert Nachtigall,
 ** Mario Mauerer, Remo Diethelm
 **
-** This file is part of the soem_interface.
+** This file is part of the soem_interface_rsl.
 **
-** The soem_interface is free software: you can redistribute it and/or modify
+** The soem_interface_rsl is free software: you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
 ** the Free Software Foundation, either version 3 of the License, or
 ** (at your option) any later version.
@@ -17,29 +17,29 @@
 ** GNU General Public License for more details.
 **
 ** You should have received a copy of the GNU General Public License
-** along with the soem_interface.  If not, see <https://www.gnu.org/licenses/>.
- */
+** along with the soem_interface_rsl.  If not, see <https://www.gnu.org/licenses/>.
+*/
 #pragma once
 
 #include <cassert>
 // std
 #include <atomic>
+#include <chrono>
 #include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
-#include <chrono>
 
 // soem
 #include <soem/soem/ethercat.h>
 
 #include <message_logger/message_logger.hpp>
 
-// soem_interface
-#include <soem_interface/common/Macros.hpp>
-#include <soem_interface/common/ThreadSleep.hpp>
+// soem_interface_rsl
+#include <soem_interface_rsl/common/Macros.hpp>
+#include <soem_interface_rsl/common/ThreadSleep.hpp>
 
-namespace soem_interface {
+namespace soem_interface_rsl {
 
 // forward declaration for EthercatSlaveBase
 class EthercatSlaveBase;
@@ -162,7 +162,7 @@ class EthercatBusBase {
   std::string getErrorString(ec_errort error);
 
   /**
-   * @brief      Prints application layer status 
+   * @brief      Prints application layer status
    *
    * @param[in]  slave  Address of the slave, 0 for all slaves.
    */
@@ -453,18 +453,20 @@ using EthercatBusBasePtr = std::shared_ptr<EthercatBusBase>;
  * @param value          Return argument, will contain the value which was read. The string needs to be preallocated to the correct size!
  * @return True if successful.
  */
-template<>
-bool EthercatBusBase::sendSdoRead<std::string>(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, std::string& value);
+template <>
+bool EthercatBusBase::sendSdoRead<std::string>(const uint16_t slave, const uint16_t index, const uint8_t subindex,
+                                               const bool completeAccess, std::string& value);
 
 /*!
-   * Send a writing SDO - specialization for strings
-   * @param slave          Address of the slave.
-   * @param index          Index of the SDO.
-   * @param subindex       Sub-index of the SDO.
-   * @param completeAccess Access all sub-indices at once.
-   * @param value          Value to write.
-   * @return True if successful.
-   */
-template<>
-bool EthercatBusBase::sendSdoWrite<std::string>(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, const std::string value);
-}  // namespace soem_interface
+ * Send a writing SDO - specialization for strings
+ * @param slave          Address of the slave.
+ * @param index          Index of the SDO.
+ * @param subindex       Sub-index of the SDO.
+ * @param completeAccess Access all sub-indices at once.
+ * @param value          Value to write.
+ * @return True if successful.
+ */
+template <>
+bool EthercatBusBase::sendSdoWrite<std::string>(const uint16_t slave, const uint16_t index, const uint8_t subindex,
+                                                const bool completeAccess, const std::string value);
+}  // namespace soem_interface_rsl
