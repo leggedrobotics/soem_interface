@@ -1,7 +1,7 @@
 
 set(SOURCES elmo_twitter.c ecatcomm.c ecatcomm_data.c)
 add_executable(elmo_twitter ${SOURCES})
-target_link_libraries(elmo_twitter soem)
+target_link_libraries(elmo_twitter soem_rsl)
 
 if(WIN32)
    target_link_libraries(elmo_twitter wpcap.lib Packet.lib Ws2_32.lib Winmm.lib)

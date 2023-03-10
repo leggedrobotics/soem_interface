@@ -30,8 +30,8 @@
 #include <utility>
 #include <vector>
 
-// soem
-#include <soem/soem/ethercat.h>
+// soem_rsl
+#include <soem_rsl/soem_rsl/ethercat.h>
 
 #include <message_logger/message_logger.hpp>
 

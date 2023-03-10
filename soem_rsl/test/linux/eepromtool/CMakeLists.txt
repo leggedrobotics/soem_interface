@@ -1,7 +1,7 @@
 
 set(SOURCES eepromtool.c)
 add_executable(eepromtool ${SOURCES})
-target_link_libraries(eepromtool soem)
+target_link_libraries(eepromtool soem_rsl)
 
 if(WIN32)
    target_link_libraries(eepromtool wpcap.lib Packet.lib Ws2_32.lib Winmm.lib)
