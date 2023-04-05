@@ -1,7 +1,7 @@
 
 set(SOURCES slaveinfo.c)
 add_executable(slaveinfo ${SOURCES})
-target_link_libraries(slaveinfo soem)
+target_link_libraries(slaveinfo soem_rsl)
 
 if(WIN32)
   target_link_libraries(slaveinfo wpcap.lib Packet.lib Ws2_32.lib Winmm.lib)

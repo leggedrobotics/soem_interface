@@ -37,7 +37,7 @@
 namespace soem_interface_rsl {
 
 /**
- * @brief      Base class for generic ethercat slaves using soem
+ * @brief      Base class for generic ethercat slaves using soem_rsl
  */
 class EthercatSlaveBase {
  public:

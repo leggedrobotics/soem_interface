@@ -666,8 +666,8 @@ WARN_LOGFILE           =
 # with spaces.
 
 INPUT                  = doc/tutorial.txt \
-                         doc/soem.dox \
-                         soem \
+                         doc/soem_rsl.dox \
+                         soem_rsl \
                          test/linux/ebox \
                          test/linux/eepromtool \
                          test/linux/red_test \
