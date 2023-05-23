@@ -38,6 +38,7 @@
 // soem_interface
 #include <soem_interface/common/Macros.hpp>
 #include <soem_interface/common/ThreadSleep.hpp>
+#include <soem_interface/common/ExtendedRegisters.hpp>
 
 namespace soem_interface {
 
@@ -163,14 +164,23 @@ class EthercatBusBase {
 
   int getState(const uint16_t slave = 0);
 
+
+
   /*!
    * Checks if all slaves are in EC_STATE_OPERATIONAL, therefore reads EC state from all slaves!
    * If not does some basic printing for potential debugging.
-   * @param tryToRecoverLostSlaves tries to recover a lost slave. NOT IMPLEMENTED:
+   * @param logErrorCounterForDiagnosis runs some error counter diagnosis, which are available to log in getBusDiagnosis.
    * @return true if all fine = all slaves in EC_STATE_OP
    */
-  bool doBusMonitoring(bool tryToRecoverLostSlaves=false);
+  bool doBusMonitoring(bool logErrorCounterForDiagnosis=false);
 
+  /*!
+   * @param if returns true busDiagnosisLogOut gets updated with the newest data.
+   * @return Return true if the busDiagnosisLog got updated.
+   * Note: needs to be called within the same thread as doBusMonitoring, not threadsafe!!
+   */
+
+  bool getBusDiagnosisLog( BusDiagnosisLog& busDiagnosisLogOut);
 
   /*!
    * Generate and return the error string.
@@ -179,12 +189,26 @@ class EthercatBusBase {
    */
   std::string getErrorString(ec_errort error);
 
+  /*!
+   * Generate and return the state string.
+   * @param state EtherCAT.
+   * @return The state string for logging.
+   */
+  static std::string getStateString(uint16_t state);
+
   /**
    * @brief      Prints application layer status 
    *
    * @param[in]  slave  Address of the slave, 0 for all slaves.
    */
   void printALStatus(const uint16_t slave = 0);
+
+  /**
+   * @brief      Prints application layer status
+   *
+   * @param[in]  slave  Address of the slave, with given Slavenames.
+   */
+  void printALStatus(const EthercatSlaveBasePtr& slave);
 
   /*!
    * Check if an error for the SDO index of the slave exists.
@@ -402,6 +426,16 @@ class EthercatBusBase {
   unsigned int workingCounterTooLowCounter_{0};
   //! Maximal number of working counter to low.
   const unsigned int maxWorkingCounterTooLow_{100};
+
+  //!Bus Diagnosis Counters, and dl status log
+  BusDiagnosisLog busDiagnosisLog_{};
+  enum class BusDiagState{
+    StateReading = 0,
+    CounterReading = 1
+  };
+  BusDiagState busDiagState_{BusDiagState::StateReading};
+  size_t nSlaves_{0}; //number of slaves on the bus - set after startup.
+  size_t busDiagOfCurrentSlave_{0}; //running variable to send only one frame per slave.
 
   // EtherCAT input/output mapping of the slaves within the datagrams.
   char ioMap_[4096];
