@@ -21,7 +21,7 @@
 cmake_minimum_required(VERSION 3.5)
 project(soem_interface)
 
-add_definitions(-std=c++14 -Wall -Werror)
+add_definitions(-std=c++17 -Wall -Werror)
 add_definitions(-DMELO_USE_COUT)
 
 set(PACKAGE_DEPENDENCIES
