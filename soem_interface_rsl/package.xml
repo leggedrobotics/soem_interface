@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<!-->
+Copyright (2019-2020) Robotics Systems Lab - ETH Zurich:
+Markus Staeuble, Jonas Junger, Johannes Pankert, Philipp Leemann,
+Tom Lankhorst, Samuel Bachmann, Gabriel Hottiger, Lennert Nachtigall,
+Mario Mauerer, Remo Diethelm
+
+This file is part of the soem_interface_rsl.
+
+The soem_interface_rsl is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+The seom_interface is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with the soem_interface_rsl.  If not, see <https://www.gnu.org/licenses/>.
+<-->
+
+<package format="2">
+
+  <name>soem_interface_rsl</name>
+  <version>0.4.0</version>
+  <description>C++ library to create multiple ethercat devices on one or multiple buses. Contains abstract base classes for the communication interface.</description>
+
+  <license>GPLv3</license>
+
+  <author>Markus Staeuble</author>
+  <author email="jungerj@student.ethz.ch">Jonas Junger</author>
+  <author email="johannes.pankert@mavt.ethz.ch">Johannes Pankert</author>
+  <author>Lennart Nachtigall</author>
+
+
+  <maintainer email="pankertj@ethz.ch">Johannes Pankert</maintainer>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>message_logger</depend>
+  <depend>soem_rsl</depend>
+
+</package>

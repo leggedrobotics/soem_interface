@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<package format="2">
+    <name>soem_rsl</name>
+    <version>1.6.0</version>
+    <description>The soem_rsl package</description>
+    <maintainer email="johannes.pankert@mavt.ethz.ch">Johannes Pankert</maintainer>
+    <license>GPLv3</license>
+    <author email="rdiethelm@anybotics.com">Remo Diethelm</author>
+    <buildtool_depend>catkin</buildtool_depend>
+</package>
