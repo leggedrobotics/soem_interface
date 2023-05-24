@@ -37,8 +37,11 @@ along with the soem_interface_rsl.  If not, see <https://www.gnu.org/licenses/>.
 
   <maintainer email="pankertj@ethz.ch">Johannes Pankert</maintainer>
 
-  <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>ament_cmake</buildtool_depend>
   <depend>message_logger</depend>
   <depend>soem_rsl</depend>
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
 
 </package>

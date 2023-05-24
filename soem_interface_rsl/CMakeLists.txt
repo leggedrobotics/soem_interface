@@ -25,30 +25,16 @@ add_definitions(-std=c++17 -Wall -Werror)
 add_definitions(-DMELO_USE_COUT)
 
 
-
 set(PACKAGE_DEPENDENCIES
+  ament_cmake
   message_logger
   soem_rsl
 )
 
-find_package(catkin REQUIRED
-  COMPONENTS
-    ${PACKAGE_DEPENDENCIES}
-)
+find_package(ament_cmake REQUIRED)
+find_package(soem_rsl REQUIRED)
+find_package(message_logger REQUIRED)
 
-catkin_package(
-  INCLUDE_DIRS
-    include
-  LIBRARIES
-    ${PROJECT_NAME}
-  CATKIN_DEPENDS
-    ${PACKAGE_DEPENDENCIES}
-)
-
-include_directories(
-  include
-  ${catkin_INCLUDE_DIRS}
-)
 
 #this has to be a shared lib because we have to avoid symbol clashes with other (older) versions of SOEM which might exists in the workspace.
 # e.g. ros-noetic-soem package (used by BOTA, ANYbotics.)
@@ -61,10 +47,6 @@ add_library(
   src/${PROJECT_NAME}/EthercatBusBase.cpp
 )
 
-add_dependencies(
-  ${PROJECT_NAME}
-  ${catkin_EXPORTED_TARGETS}
-)
 
 # https://stackoverflow.com/questions/2222162/how-to-apply-fvisibility-option-to-symbols-in-static-libraries
 # special link option.
@@ -72,20 +54,36 @@ add_dependencies(
 # set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wl,--exclude-libs,ALL")
 target_link_options(${PROJECT_NAME} PRIVATE "-Wl,--exclude-libs,ALL")
 
-target_link_libraries(
-  ${PROJECT_NAME}
-  ${catkin_LIBRARIES}
+target_include_directories(${PROJECT_NAME}
+    PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+
+ament_target_dependencies(
+    ${PROJECT_NAME} ${PACKAGE_DEPENDENCIES}
 )
+
+ament_export_libraries(${PROJECT_NAME})
+ament_export_dependencies(${PACKAGE_DEPENDENCIES})
+ament_export_include_directories(include)
+
 
 #hide all symboles except the explicitly marked ones.
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_VISIBILITY_PRESET hidden)
 set_target_properties(${PROJECT_NAME} PROPERTIES C_VISIBILITY_PRESET hidden)
 
-install(TARGETS ${PROJECT_NAME}
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+install(
+    DIRECTORY include/
+    DESTINATION include
 )
-install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+
+install(
+    TARGETS ${PROJECT_NAME}
+    EXPORT ${PROJECT_NAME}Target
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    RUNTIME DESTINATION bin
+    INCLUDES DESTINATION include
 )
+
+ament_package()

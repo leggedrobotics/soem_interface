@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake/Modules")
 project(soem_rsl C)
 
-find_package(catkin REQUIRED)
+find_package(ament_cmake REQUIRED)
 
 if(WIN32)
   set(OS "win32")
@@ -45,15 +45,11 @@ endif()
 
 message("OS is ${OS}")
 
-
-catkin_package(
-   INCLUDE_DIRS
-        ./soem_rsl
-        ./soem_rsl/soem_rsl
-        ./soem_rsl/osal
-        ./soem_rsl/osal/${OS}
-        ./soem_rsl/oshw/${OS}
-   LIBRARIES soem_rsl)
+set(INCLUDE_DIRS ./soem
+    ./soem/soem
+    ./soem/osal
+    ./soem/osal/${OS}
+    ./soem/oshw/${OS})
 
 set(soem_rsl_INCLUDE_INSTALL_DIR include/soem_rsl)
 set(soem_rsl_LIB_INSTALL_DIR lib)
@@ -78,6 +74,8 @@ add_library(soem_rsl STATIC
   ${OSHW_EXTRA_SOURCES})
 target_link_libraries(soem_rsl ${OS_LIBS})
 set_target_properties (soem_rsl PROPERTIES POSITION_INDEPENDENT_CODE ON)
+ament_export_libraries(soem_rsl)
+
 
 target_include_directories(soem_rsl PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/soem_rsl/soem_rsl>
@@ -113,6 +111,8 @@ install(FILES
   DESTINATION ${CMAKE_INSTALL_PREFIX}/include
 )
 
+ament_export_include_directories(include)
+
 #message(${CMAKE_INSTALL_PREFIX})
 #add_custom_target(link_target ALL
  #                 COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_INSTALL_PREFIX}/include/soem_rsl/ethercattype.h ${CMAKE_INSTALL_PREFIX}/include/ethercattype.h
@@ -123,3 +123,5 @@ if(BUILD_TESTS)
   add_subdirectory(soem_rsl/test/linux/eepromtool)
   add_subdirectory(soem_rsl/test/linux/simple_test)
 endif()
+
+ament_package()
