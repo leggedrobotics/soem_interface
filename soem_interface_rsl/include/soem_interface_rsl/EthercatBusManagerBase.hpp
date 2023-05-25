@@ -73,22 +73,22 @@ class EthercatBusManagerBase {
    *
    * @return     True if successful
    */
-  bool startupCommunication();
+  FOX_API bool startupCommunication();
 
   /**
    * @brief      Sets all busses to safe operational state
    */
-  void setBussesSafeOperational();
+  FOX_API void setBussesSafeOperational();
 
   /**
    * @brief      Sets all busses to pre operational state
    */
-  void setBussesPreOperational();
+  FOX_API void setBussesPreOperational();
 
   /**
    * @brief      Sets all busses to operational state
    */
-  void setBussesOperational();
+  FOX_API void setBussesOperational();
 
   /**
    * @brief      Waits for the slave to reach a state
@@ -99,23 +99,23 @@ class EthercatBusManagerBase {
    * @param[in]  maxRetries  The maximum retries
    * @param[in]  retrySleep  The retry sleep
    */
-  void waitForState(const uint16_t state, const uint16_t slave = 0, const std::string busName = "", const unsigned int maxRetries = 40,
-                    const double retrySleep = 0.001);
+  FOX_API void waitForState(const uint16_t state, const uint16_t slave = 0, const std::string busName = "",
+                            const unsigned int maxRetries = 40, const double retrySleep = 0.001);
 
   /**
    * @brief      Calls update read on all busses
    */
-  void readAllBuses();
+  FOX_API void readAllBuses();
 
   /**
    * @brief      Calls update write on all busses
    */
-  void writeToAllBuses();
+  FOX_API void writeToAllBuses();
 
   /**
    * @brief      Calls shutdown on all busses
    */
-  void shutdownAllBuses();
+  FOX_API void shutdownAllBuses();
 
   /**
    * @brief      Returns a non owning bus pointer. The manager still manages all

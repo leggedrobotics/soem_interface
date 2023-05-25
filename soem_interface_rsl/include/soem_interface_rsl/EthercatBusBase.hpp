@@ -21,6 +21,12 @@
 */
 #pragma once
 
+#define FOX_HELPER_DLL_IMPORT __attribute__((visibility("default")))
+#define FOX_HELPER_DLL_EXPORT __attribute__((visibility("default")))
+#define FOX_HELPER_DLL_LOCAL __attribute__((visibility("hidden")))
+#define FOX_API FOX_HELPER_DLL_IMPORT
+#define FOX_LOCAL FOX_HELPER_DLL_LOCAL
+
 #include <cassert>
 // std
 #include <atomic>
@@ -50,7 +56,7 @@ using EthercatSlaveBasePtr = std::shared_ptr<EthercatSlaveBase>;
  * @brief      Class for managing an ethercat bus containing one or multpile
  *             slaves
  */
-class EthercatBusBase {
+class FOX_API EthercatBusBase {
  public:
   using PdoSizePair = std::pair<uint16_t, uint16_t>;
   using PdoSizeMap = std::unordered_map<std::string, PdoSizePair>;
@@ -114,36 +120,36 @@ class EthercatBusBase {
    * @slave ANYdrive EtherCAT slave.
    * @return True if successful.
    */
-  bool addSlave(const EthercatSlaveBasePtr& slave);
+  FOX_API bool addSlave(const EthercatSlaveBasePtr& slave);
 
   /*!
    * Startup the bus communication.
    * @param sizeCheck	perform a check of the Rx and Tx Pdo sizes defined in the PdoInfo oject of the slaves
    * @return True if successful.
    */
-  bool startup(const bool sizeCheck = true);
+  FOX_API bool startup(const bool sizeCheck = true);
 
   /*!
    * Update step 1: Read all PDOs.
    */
-  void updateRead();
+  FOX_API void updateRead();
 
   /*!
    * Update step 2: Write all PDOs.
    */
-  void updateWrite();
+  FOX_API void updateWrite();
 
   /*!
    * Shutdown the bus communication.
    */
-  void shutdown();
+  FOX_API void shutdown();
 
   /*!
    * Set the desired EtherCAT state machine state.
    * @param state Desired state.
    * @param slave Address of the slave, 0 for all slaves.
    */
-  void setState(const uint16_t state, const uint16_t slave = 0);
+  FOX_API void setState(const uint16_t state, const uint16_t slave = 0);
 
   /*!
    * Wait for an EtherCAT state machine state to be reached.
@@ -153,7 +159,8 @@ class EthercatBusBase {
    * @param retrySleep Duration to sleep between the retries.
    * @return True if the state has been reached within the timeout.
    */
-  bool waitForState(const uint16_t state, const uint16_t slave = 0, const unsigned int maxRetries = 40, const double retrySleep = 0.001);
+  FOX_API bool waitForState(const uint16_t state, const uint16_t slave = 0, const unsigned int maxRetries = 40,
+                            const double retrySleep = 0.001);
 
   /*!
    * Reads the ethercat state machine state, updates the state information of all slaves.
@@ -170,7 +177,7 @@ class EthercatBusBase {
    * @param logErrorCounterForDiagnosis runs some error counter diagnosis, which are available to log in getBusDiagnosis.
    * @return true if all fine = all slaves in EC_STATE_OP
    */
-  bool doBusMonitoring(bool logErrorCounterForDiagnosis = false);
+  FOX_API bool doBusMonitoring(bool logErrorCounterForDiagnosis = false);
 
   /*!
    * @param if returns true busDiagnosisLogOut gets updated with the newest data.
@@ -178,7 +185,7 @@ class EthercatBusBase {
    * Note: needs to be called within the same thread as doBusMonitoring, not threadsafe!!
    */
 
-  bool getBusDiagnosisLog(BusDiagnosisLog& busDiagnosisLogOut);
+  FOX_API bool getBusDiagnosisLog(BusDiagnosisLog& busDiagnosisLogOut);
 
   /*!
    * Generate and return the error string.
@@ -199,7 +206,7 @@ class EthercatBusBase {
    *
    * @param[in]  slave  Address of the slave, 0 for all slaves.
    */
-  void printALStatus(const uint16_t slave = 0);
+  FOX_API void printALStatus(const uint16_t slave = 0);
 
   /**
    * @brief      Prints application layer status
@@ -214,7 +221,7 @@ class EthercatBusBase {
    * @param index   Index of the SDO.
    * @return True if an error for the index exists.
    */
-  bool checkForSdoErrors(const uint16_t slave, const uint16_t index);
+  FOX_API bool checkForSdoErrors(const uint16_t slave, const uint16_t index);
 
   /*!
    * Synchronize the distributed clocks.
@@ -256,7 +263,8 @@ class EthercatBusBase {
    * @return True if successful.
    */
   template <typename Value>
-  bool sendSdoWrite(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, const Value value) {
+  FOX_API bool sendSdoWrite(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess,
+                            const Value value) {
     assert(static_cast<int>(slave) <= getNumberOfSlaves());
     const int size = sizeof(Value);
     Value valueCopy = value;  // copy value to make it modifiable
@@ -286,7 +294,7 @@ class EthercatBusBase {
    * @return True if successful.
    */
   template <typename Value>
-  bool sendSdoRead(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, Value& value) {
+  FOX_API bool sendSdoRead(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, Value& value) {
     assert(static_cast<int>(slave) <= getNumberOfSlaves());
     int size = sizeof(Value);
     int wkc = 0;

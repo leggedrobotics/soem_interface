@@ -24,6 +24,9 @@ project(soem_interface_rsl)
 add_definitions(-std=c++17 -Wall -Werror)
 add_definitions(-DMELO_USE_COUT)
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden")
+
 set(PACKAGE_DEPENDENCIES
   message_logger
   soem_rsl

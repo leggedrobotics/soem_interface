@@ -21,9 +21,14 @@
 */
 
 #pragma once
+#define FOX_HELPER_DLL_IMPORT __attribute__((visibility("default")))
+#define FOX_HELPER_DLL_EXPORT __attribute__((visibility("default")))
+#define FOX_HELPER_DLL_LOCAL __attribute__((visibility("hidden")))
+#define FOX_API FOX_HELPER_DLL_IMPORT
+#define FOX_LOCAL FOX_HELPER_DLL_LOCAL
 
 namespace soem_interface_rsl {
 
-void threadSleep(const double duration);
+FOX_API void threadSleep(const double duration);
 
 }  // namespace soem_interface_rsl

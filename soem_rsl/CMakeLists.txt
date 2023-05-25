@@ -18,6 +18,8 @@ if(WIN32)
 elseif(UNIX AND NOT APPLE)
   set(OS "linux")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden")
   set(OS_LIBS pthread rt)
 elseif(APPLE)
   # This must come *before* linux or MacOSX will identify as Unix.
@@ -77,6 +79,7 @@ add_library(soem_rsl STATIC
   ${OSHW_EXTRA_SOURCES})
 target_link_libraries(soem_rsl ${OS_LIBS})
 set_target_properties (soem_rsl PROPERTIES POSITION_INDEPENDENT_CODE ON)
+set_target_properties(soem_rsl PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
 target_include_directories(soem_rsl PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/soem_rsl>

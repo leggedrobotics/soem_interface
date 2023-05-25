@@ -39,7 +39,7 @@ namespace soem_interface_rsl {
 /**
  * @brief      Base class for generic ethercat slaves using soem_rsl
  */
-class EthercatSlaveBase {
+class FOX_API EthercatSlaveBase {
  public:
   /**
    * @brief      Struct defining the Pdo characteristic
