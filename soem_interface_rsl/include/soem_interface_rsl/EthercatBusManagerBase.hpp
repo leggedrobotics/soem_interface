@@ -99,8 +99,7 @@ class EthercatBusManagerBase {
    * @param[in]  maxRetries  The maximum retries
    * @param[in]  retrySleep  The retry sleep
    */
-  void waitForState(const uint16_t state, const uint16_t slave = 0, const std::string busName = "", const unsigned int maxRetries = 40,
-                    const double retrySleep = 0.001);
+  void waitForState(const uint16_t state, const uint16_t slave = 0, const std::string busName = "", const unsigned int maxRetries = 40);
 
   /**
    * @brief      Calls update read on all busses
@@ -153,7 +152,7 @@ class EthercatBusManagerBase {
 
  protected:
   // Mutex prohibiting simultaneous access to EtherCAT bus manager.
-  std::recursive_mutex busMutex_;
+  std::mutex busMutex_;
   BusMap buses_;
 };
 

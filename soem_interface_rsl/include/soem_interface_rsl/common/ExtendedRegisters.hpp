@@ -5,7 +5,6 @@
 #ifndef ETHERCAT_WS_EXTENDEDREGISTERS_HPP
 #define ETHERCAT_WS_EXTENDEDREGISTERS_HPP
 
-#include <ethercat.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <array>
@@ -93,26 +92,29 @@ struct RegisterDefinition {
 
     ReturnType rawValue{};
     std::memcpy(&rawValue, (static_cast<char*>(rawData) + offset), sizeof(ReturnType));
-    switch (regTypeEnumByAddr(regAddrEnum)) {
-      case RegTypeEnum::Unsigned8:
-        break;
-      case RegTypeEnum::Unsigned16:
-        rawValue = etohs(rawValue);
-        break;
-      case RegTypeEnum::Unsigned32:
-        rawValue = etohl(rawValue);
-        break;
-      case RegTypeEnum::Unsigned64:
-        rawValue = etohll(rawValue);
-        break;
-      default:
-        throw std::runtime_error("check endianess when converting larger memory blobs..");
-    }
+
+    //handle endianess. (default little endinaness)  ethos = ethercat-to-host-short
+//    switch (regTypeEnumByAddr(regAddrEnum)) {
+//      case RegTypeEnum::Unsigned8:
+//        break;
+//      case RegTypeEnum::Unsigned16:
+//        rawValue = etohs(rawValue);
+//        break;
+//      case RegTypeEnum::Unsigned32:
+//        rawValue = etohl(rawValue);
+//        break;
+//      case RegTypeEnum::Unsigned64:
+//        rawValue = etohll(rawValue);
+//        break;
+//      default:
+//        throw std::runtime_error("check endianess when converting larger memory blobs..");
+//    }
+
     return rawValue;
   }
 };
 
-struct REG {
+struct SOEM_RSL_EXPORT REG  {
   enum class ERROR_COUNTERS : uint16_t {
     FRAME_ERROR_PORT0_ADDR = 0x0300,
     PHYSICAL_ERROR_PORT0_ADDR = 0x0301,

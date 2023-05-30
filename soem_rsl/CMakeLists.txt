@@ -49,9 +49,10 @@ message("OS is ${OS}")
 catkin_package(
    INCLUDE_DIRS
         ./soem_rsl
-        ./osal
-        ./osal/${OS}
-        ./oshw/${OS}
+        ./soem_rsl/soem_rsl
+        ./soem_rsl/osal
+        ./soem_rsl/osal/${OS}
+        ./soem_rsl/oshw/${OS}
    LIBRARIES soem_rsl)
 
 set(soem_rsl_INCLUDE_INSTALL_DIR include/soem_rsl)
@@ -60,13 +61,13 @@ set(BUILD_TESTS TRUE)
 
 
 
-file(GLOB soem_rsl_SOURCES soem_rsl/*.c)
-file(GLOB OSAL_SOURCES osal/${OS}/*.c)
-file(GLOB OSHW_SOURCES oshw/${OS}/*.c)
+file(GLOB soem_rsl_SOURCES soem_rsl/soem_rsl/*.c)
+file(GLOB OSAL_SOURCES soem_rsl/osal/${OS}/*.c)
+file(GLOB OSHW_SOURCES soem_rsl/oshw/${OS}/*.c)
 
-file(GLOB soem_rsl_HEADERS soem_rsl/*.h)
-file(GLOB OSAL_HEADERS osal/osal.h osal/${OS}/*.h)
-file(GLOB OSHW_HEADERS oshw/${OS}/*.h)
+file(GLOB soem_rsl_HEADERS soem_rsl/soem_rsl/*.h)
+file(GLOB OSAL_HEADERS soem_rsl/osal/osal.h soem_rsl/osal/${OS}/*.h)
+file(GLOB OSHW_HEADERS soem_rsl/oshw/${OS}/*.h)
 
 message(${OSAL_HEADERS})
 
@@ -79,21 +80,20 @@ target_link_libraries(soem_rsl ${OS_LIBS})
 set_target_properties (soem_rsl PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 target_include_directories(soem_rsl PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/soem_rsl>
-  $<INSTALL_INTERFACE:include/soem_rsl>)
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/soem_rsl/soem_rsl>
+  $<INSTALL_INTERFACE:include/soem_rsl/soem_rsl>)
 
 target_include_directories(soem_rsl PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/osal>
-  $<INSTALL_INTERFACE:include/soem_rsl>)
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/soem_rsl/osal>
+  $<INSTALL_INTERFACE:include/soem_rsl/soem_rsl>)
 
 target_include_directories(soem_rsl PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/osal/${OS}>
-  $<INSTALL_INTERFACE:include/soem_rsl>)
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/soem_rsl/osal/${OS}>
+  $<INSTALL_INTERFACE:include/soem_rsl/soem_rsl>)
 
 target_include_directories(soem_rsl
-  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/oshw/${OS}>
-  $<INSTALL_INTERFACE:include/soem_rsl>
-  )
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/soem_rsl/oshw/${OS}>
+  $<INSTALL_INTERFACE:include/soem_rsl/soem_rsl>)
 
 message("LIB_DIR: ${soem_rsl_LIB_INSTALL_DIR}")
 
@@ -109,7 +109,7 @@ install(FILES
 )
 
 install(FILES
-  ./soem_rsl/ethercattype.h
+  ./soem_rsl/soem_rsl/ethercattype.h
   DESTINATION ${CMAKE_INSTALL_PREFIX}/include
 )
 
@@ -119,7 +119,7 @@ install(FILES
  #                 VERBATIM)
 
 if(BUILD_TESTS) 
-  add_subdirectory(test/linux/slaveinfo)
-  add_subdirectory(test/linux/eepromtool)
-  add_subdirectory(test/linux/simple_test)
+  add_subdirectory(soem_rsl/test/linux/slaveinfo)
+  add_subdirectory(soem_rsl/test/linux/eepromtool)
+  add_subdirectory(soem_rsl/test/linux/simple_test)
 endif()

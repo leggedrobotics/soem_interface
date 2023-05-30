@@ -32,6 +32,7 @@
 #include <message_logger/message_logger.hpp>
 
 // soem_interface_rsl
+#include <soem_interface_rsl/common/soem_rsl_export.h>
 #include <soem_interface_rsl/EthercatBusBase.hpp>
 
 namespace soem_interface_rsl {
@@ -39,7 +40,7 @@ namespace soem_interface_rsl {
 /**
  * @brief      Base class for generic ethercat slaves using soem_rsl
  */
-class EthercatSlaveBase {
+class SOEM_RSL_EXPORT EthercatSlaveBase {
  public:
   /**
    * @brief      Struct defining the Pdo characteristic

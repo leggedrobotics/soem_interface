@@ -31,11 +31,11 @@
 #include <vector>
 
 // soem_rsl
-#include <ethercat.h>
 
 #include <message_logger/message_logger.hpp>
-
 // soem_interface_rsl
+
+#include <soem_interface_rsl/common/soem_rsl_export.h>
 #include <soem_interface_rsl/common/ExtendedRegisters.hpp>
 #include <soem_interface_rsl/common/Macros.hpp>
 #include <soem_interface_rsl/common/ThreadSleep.hpp>
@@ -46,11 +46,26 @@ namespace soem_interface_rsl {
 class EthercatSlaveBase;
 using EthercatSlaveBasePtr = std::shared_ptr<EthercatSlaveBase>;
 
+//Template Adatper for pImpl Design with Templates. https://en.cppreference.com/w/cpp/language/pimpl
+class SOEM_RSL_EXPORT EthercatBusBaseTemplateAdapter{
+ private:
+  struct EthercatSlaveBaseImpl;
+ protected:
+  std::unique_ptr<EthercatSlaveBaseImpl> pImpl_;
+  bool sdoWriteForward(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, int size, void* buf);
+  bool sdoReadForward(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, int size, void* buf);
+  void readTxPdoForward(const uint16_t slave, int size, void* buf) const;
+  void writeRxPdoForward(const uint16_t slave, int size, const void* buf);
+ public:
+  explicit EthercatBusBaseTemplateAdapter(const std::string& name);
+  ~EthercatBusBaseTemplateAdapter();
+};
+
 /**
  * @brief      Class for managing an ethercat bus containing one or multpile
  *             slaves
  */
-class EthercatBusBase {
+class SOEM_RSL_EXPORT EthercatBusBase : private EthercatBusBaseTemplateAdapter{
  public:
   using PdoSizePair = std::pair<uint16_t, uint16_t>;
   using PdoSizeMap = std::unordered_map<std::string, PdoSizePair>;
@@ -65,25 +80,14 @@ class EthercatBusBase {
   /*!
    * Destructor.
    */
-  ~EthercatBusBase() = default;
+  virtual ~EthercatBusBase();
 
   /*!
    * Get the name of the bus.
    * @return Name of the bus.
    */
-  const std::string& getName() const { return name_; }
+  const std::string& getName() const;
 
-  /*!
-   * Get the time of the last successful PDO reading.
-   * @return Stamp.
-   */
-  const std::chrono::time_point<std::chrono::high_resolution_clock>& getUpdateReadStamp() const { return updateReadStamp_; }
-
-  /*!
-   * Get the time of the last successful PDO writing.
-   * @return Stamp.
-   */
-  const std::chrono::time_point<std::chrono::high_resolution_clock>& getUpdateWriteStamp() const { return updateWriteStamp_; }
 
   /*!
    * Check if a bus is available.
@@ -110,8 +114,8 @@ class EthercatBusBase {
   int getNumberOfSlaves() const;
 
   /*!
-   * Add an ANYdrive EtherCAT slave.
-   * @slave ANYdrive EtherCAT slave.
+   * Add an EtherCAT slave.
+   * @slave EtherCAT slave.
    * @return True if successful.
    */
   bool addSlave(const EthercatSlaveBasePtr& slave);
@@ -134,6 +138,19 @@ class EthercatBusBase {
   void updateWrite();
 
   /*!
+   * Get the time of the last successful PDO reading, not threadsafe.
+   * @return Stamp.
+   */
+  const std::chrono::time_point<std::chrono::high_resolution_clock>& getUpdateReadStamp() const;
+
+  /*!
+   * Get the time of the last successful PDO writing, not threadsafe
+   * @return Stamp.
+   */
+  const std::chrono::time_point<std::chrono::high_resolution_clock>& getUpdateWriteStamp() const;
+
+
+  /*!
    * Shutdown the bus communication.
    */
   void shutdown();
@@ -145,6 +162,13 @@ class EthercatBusBase {
    */
   void setState(const uint16_t state, const uint16_t slave = 0);
 
+
+  /*!
+   * Set the desired EtherCAT state machine state.
+   * @param state Desired state for all slaves on the bus.
+   */
+  void setState(ETHERCAT_SM_STATE state);
+
   /*!
    * Wait for an EtherCAT state machine state to be reached.
    * @param state      Desired state.
@@ -153,7 +177,8 @@ class EthercatBusBase {
    * @param retrySleep Duration to sleep between the retries.
    * @return True if the state has been reached within the timeout.
    */
-  bool waitForState(const uint16_t state, const uint16_t slave = 0, const unsigned int maxRetries = 40, const double retrySleep = 0.001);
+  bool waitForState(const uint16_t state, const uint16_t slave = 0, const unsigned int maxRetries = 40);
+  bool waitForState(ETHERCAT_SM_STATE state, const uint16_t slave= 0, const unsigned int maxRetries = 40);
 
   /*!
    * Reads the ethercat state machine state, updates the state information of all slaves.
@@ -180,12 +205,6 @@ class EthercatBusBase {
 
   bool getBusDiagnosisLog(BusDiagnosisLog& busDiagnosisLogOut);
 
-  /*!
-   * Generate and return the error string.
-   * @param error EtherCAT error object.
-   * @return The error string.
-   */
-  std::string getErrorString(ec_errort error);
 
   /*!
    * Generate and return the state string.
@@ -194,27 +213,7 @@ class EthercatBusBase {
    */
   static std::string getStateString(uint16_t state);
 
-  /**
-   * @brief      Prints application layer status
-   *
-   * @param[in]  slave  Address of the slave, 0 for all slaves.
-   */
-  void printALStatus(const uint16_t slave = 0);
 
-  /**
-   * @brief      Prints application layer status
-   *
-   * @param[in]  slave  Address of the slave, with given Slavenames.
-   */
-  void printALStatus(const EthercatSlaveBasePtr& slave);
-
-  /*!
-   * Check if an error for the SDO index of the slave exists.
-   * @param slave   Address of the slave.
-   * @param index   Index of the SDO.
-   * @return True if an error for the index exists.
-   */
-  bool checkForSdoErrors(const uint16_t slave, const uint16_t index);
 
   /*!
    * Synchronize the distributed clocks.
@@ -236,15 +235,6 @@ class EthercatBusBase {
    */
   PdoSizeMap getHardwarePdoSizes();
 
-  /*!
-   * Returns a pair with the TxPdo and RxPdo sizes for the requested address
-   * Overloads the "PdoSizeMap getHardwarePdoSizes()" method.
-   *
-   * @param      slave  Address of the slave
-   *
-   * @return     std::pair with the rx (first) and tx (second) Pdo sizes
-   */
-  PdoSizePair getHardwarePdoSizes(const uint16_t slave);
 
   /*!
    * Send a writing SDO.
@@ -257,23 +247,9 @@ class EthercatBusBase {
    */
   template <typename Value>
   bool sendSdoWrite(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, const Value value) {
-    assert(static_cast<int>(slave) <= getNumberOfSlaves());
     const int size = sizeof(Value);
     Value valueCopy = value;  // copy value to make it modifiable
-    int wkc = 0;
-    {
-      std::lock_guard<std::recursive_mutex> guard(contextMutex_);
-      wkc = ecx_SDOwrite(&ecatContext_, slave, index, subindex, static_cast<boolean>(completeAccess), size, &valueCopy, EC_TIMEOUTRXM);
-    }
-    if (wkc <= 0) {
-      MELO_ERROR_STREAM("Slave " << slave << ": Working counter too low (" << wkc << ") for writing SDO (ID: 0x" << std::setfill('0')
-                                 << std::setw(4) << std::hex << index << ", SID 0x" << std::setfill('0') << std::setw(2) << std::hex
-                                 << static_cast<uint16_t>(subindex) << ").");
-      checkForSdoErrors(slave, index);
-      printALStatus();
-      return false;
-    }
-    return true;
+    return sdoWriteForward(slave, index, subindex, completeAccess, size, &valueCopy);
   }
 
   /*!
@@ -287,29 +263,8 @@ class EthercatBusBase {
    */
   template <typename Value>
   bool sendSdoRead(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, Value& value) {
-    assert(static_cast<int>(slave) <= getNumberOfSlaves());
     int size = sizeof(Value);
-    int wkc = 0;
-    {
-      std::lock_guard<std::recursive_mutex> guard(contextMutex_);
-      wkc = ecx_SDOread(&ecatContext_, slave, index, subindex, static_cast<boolean>(completeAccess), &size, &value, EC_TIMEOUTRXM);
-    }
-    if (wkc <= 0) {
-      MELO_ERROR_STREAM("Slave " << slave << ": Working counter too low (" << wkc << ") for reading SDO (ID: 0x" << std::setfill('0')
-                                 << std::setw(4) << std::hex << index << ", SID 0x" << std::setfill('0') << std::setw(2) << std::hex
-                                 << static_cast<uint16_t>(subindex) << ").");
-
-      checkForSdoErrors(slave, index);
-      printALStatus();
-      return false;
-    }
-    if (size != sizeof(Value)) {
-      MELO_ERROR_STREAM("Slave " << slave << ": Size mismatch (expected " << sizeof(Value) << " bytes, read " << size
-                                 << " bytes) for reading SDO (ID: 0x" << std::setfill('0') << std::setw(4) << std::hex << index
-                                 << ", SID 0x" << std::setfill('0') << std::setw(2) << std::hex << static_cast<uint16_t>(subindex) << ").");
-      return false;
-    }
-    return true;
+    return sdoReadForward(slave, index, subindex, completeAccess, size, &value);
   }
 
   /**
@@ -320,52 +275,14 @@ class EthercatBusBase {
    * @param value          Return argument, will contain the value which was read.
    * @return True if successful.
    */
-  bool sendSdoReadVisibleString(const uint16_t slave, const uint16_t index, const uint8_t subindex, std::string& value) {
-    assert(static_cast<int>(slave) <= getNumberOfSlaves());
-    char buffer[128];
-    int length = sizeof(buffer) - 1;
-    int wkc = 0;
-    {
-      std::lock_guard<std::recursive_mutex> guard(contextMutex_);
-      wkc = ecx_SDOread(&ecatContext_, slave, index, subindex, static_cast<boolean>(false), &length, &buffer, EC_TIMEOUTRXM);
-    }
-    if (wkc <= 0) {
-      MELO_ERROR_STREAM("Slave " << slave << ": Working counter too low (" << wkc << ") for reading SDO (ID: 0x" << std::setfill('0')
-                                 << std::setw(4) << std::hex << index << ", SID 0x" << std::setfill('0') << std::setw(2) << std::hex
-                                 << static_cast<uint16_t>(subindex) << ").");
-      return false;
-    }
-    value.clear();
-    for (int i = 0; i < length; ++i) {
-      MELO_DEBUG_STREAM("Char      : " << buffer[i])
-      MELO_DEBUG_STREAM("Char (int): " << static_cast<unsigned int>(buffer[i]))
-      if (buffer[i] != 0x0) {
-        value += buffer[i];
-      } else {
-        break;
-      }
-    }
-    return true;
-  }
+  bool sendSdoReadVisibleString(const uint16_t slave, const uint16_t index, const uint8_t subindex, std::string& value);
 
-  /*!
-   * Get the PDO expected working counter.
-   * @param slave Address of the slave, 0 for all slaves.
-   * @return Expected working counter.
-   */
-  int getExpectedWorkingCounter(const uint16_t slave = 0) const;
-
-  /*!
-   * Check if the current working counter for all slaves is high enough.
-   * @return True if the working counter is equal or higher than expected.
-   */
-  bool workingCounterIsOk() const;
 
   /*!
    * Check if the bus is ok.
    * @return True if bus is ok.
    */
-  bool busIsOk() const;
+  [[nodiscard]] bool busIsOk() const;
 
   /*!
    * Read a TxPDO from the buffer.
@@ -374,10 +291,9 @@ class EthercatBusBase {
    */
   template <typename TxPdo>
   void readTxPdo(const uint16_t slave, TxPdo& txPdo) const {
-    assert(static_cast<int>(slave) <= getNumberOfSlaves());
-    std::lock_guard<std::recursive_mutex> guard(contextMutex_);
-    assert(sizeof(TxPdo) == ecatContext_.slavelist[slave].Ibytes);
-    memcpy(&txPdo, ecatContext_.slavelist[slave].inputs, sizeof(TxPdo));
+    std::byte buffer[sizeof(TxPdo)];
+    readTxPdoForward(slave, sizeof(TxPdo), buffer);
+    memcpy(&txPdo, buffer, sizeof(TxPdo));
   }
 
   /*!
@@ -387,111 +303,10 @@ class EthercatBusBase {
    */
   template <typename RxPdo>
   void writeRxPdo(const uint16_t slave, const RxPdo& rxPdo) {
-    assert(static_cast<int>(slave) <= getNumberOfSlaves());
-    std::lock_guard<std::recursive_mutex> guard(contextMutex_);
-    assert(sizeof(RxPdo) == ecatContext_.slavelist[slave].Obytes);
-    memcpy(ecatContext_.slavelist[slave].outputs, &rxPdo, sizeof(RxPdo));
+    std::byte buffer[sizeof(RxPdo)];
+    memcpy(buffer, &rxPdo, sizeof(RxPdo));
+    writeRxPdoForward(slave, sizeof(RxPdo), buffer);
   }
-
- protected:
-  //! Name of the bus.
-  std::string name_;
-
-  //! Whether the bus has been initialized successfully
-  bool initlialized_{false};
-
-  //! List of slaves.
-  std::vector<EthercatSlaveBasePtr> slaves_;
-
-  //! Bool indicating whether PDO data has been sent and not read yet.
-  bool sentProcessData_{false};
-
-  //! Working counter of the most recent PDO.
-  std::atomic<int> wkc_;
-
-  //! Time of the last successful PDO reading.
-  std::chrono::time_point<std::chrono::high_resolution_clock> updateReadStamp_;
-  //! Time of the last successful PDO writing.
-  std::chrono::time_point<std::chrono::high_resolution_clock> updateWriteStamp_;
-
-  //! Maximal number of retries to configure the EtherCAT bus.
-  const unsigned int ecatConfigMaxRetries_{5};
-  //! Time to sleep between the retries.
-  const double ecatConfigRetrySleep_{1.0};
-
-  //! Count working counter too low in a row.
-  unsigned int workingCounterTooLowCounter_{0};
-  //! Maximal number of working counter to low.
-  const unsigned int maxWorkingCounterTooLow_{100};
-
-  //! Bus Diagnosis Counters, and dl status log
-  BusDiagnosisLog busDiagnosisLog_{};
-  enum class BusDiagState { StateReading = 0, CounterReading = 1 };
-  BusDiagState busDiagState_{BusDiagState::StateReading};
-  size_t nSlaves_{0};                // number of slaves on the bus - set after startup.
-  size_t busDiagOfCurrentSlave_{0};  // running variable to send only one frame per slave.
-
-  // EtherCAT input/output mapping of the slaves within the datagrams.
-  char ioMap_[4096];
-
-  // EtherCAT context data elements:
-
-  // Port reference.
-  ecx_portt ecatPort_;
-  // List of slave data. Index 0 is reserved for the master, higher indices for the slaves.
-  ec_slavet ecatSlavelist_[EC_MAXSLAVE];
-  // Number of slaves found in the network.
-  int ecatSlavecount_{0};
-  // Slave group structure.
-  ec_groupt ecatGrouplist_[EC_MAXGROUP];
-  // Internal, reference to EEPROM cache buffer.
-  uint8 ecatEsiBuf_[EC_MAXEEPBUF];
-  // Internal, reference to EEPROM cache map.
-  uint32 ecatEsiMap_[EC_MAXEEPBITMAP];
-  // Internal, reference to error list.
-  ec_eringt ecatEList_;
-  // Internal, reference to processdata stack buffer info.
-  ec_idxstackT ecatIdxStack_;
-  // Boolean indicating if an error is available in error stack.
-  boolean ecatError_{FALSE};
-  // Reference to last DC time from slaves.
-  int64 ecatDcTime_{0};
-  // Internal, SM buffer.
-  ec_SMcommtypet ecatSmCommtype_[EC_MAX_MAPT];
-  // Internal, PDO assign list.
-  ec_PDOassignt ecatPdoAssign_[EC_MAX_MAPT];
-  // Internal, PDO description list.
-  ec_PDOdesct ecatPdoDesc_[EC_MAX_MAPT];
-  // Internal, SM list from EEPROM.
-  ec_eepromSMt ecatSm_;
-  // Internal, FMMU list from EEPROM.
-  ec_eepromFMMUt ecatFmmu_;
-
-  mutable std::recursive_mutex contextMutex_;
-  // EtherCAT context data.
-  // Note: soem_rsl does not use dynamic memory allocation (new/delete). Therefore
-  // all context pointers must be null or point to an existing member.
-  ecx_contextt ecatContext_ = {&ecatPort_,
-                               &ecatSlavelist_[0],
-                               &ecatSlavecount_,
-                               EC_MAXSLAVE,
-                               &ecatGrouplist_[0],
-                               EC_MAXGROUP,
-                               &ecatEsiBuf_[0],
-                               &ecatEsiMap_[0],
-                               0,
-                               &ecatEList_,
-                               &ecatIdxStack_,
-                               &ecatError_,
-                               &ecatDcTime_,
-                               &ecatSmCommtype_[0],
-                               &ecatPdoAssign_[0],
-                               &ecatPdoDesc_[0],
-                               &ecatSm_,
-                               &ecatFmmu_,
-                               nullptr,
-                               nullptr,
-                               0};
 };
 
 using EthercatBusBasePtr = std::shared_ptr<EthercatBusBase>;

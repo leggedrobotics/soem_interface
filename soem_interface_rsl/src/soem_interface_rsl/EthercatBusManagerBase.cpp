@@ -31,7 +31,7 @@ bool EthercatBusManagerBase::addEthercatBus(soem_interface_rsl::EthercatBusBase*
     return false;
   }
 
-  std::lock_guard<std::recursive_mutex> lock(busMutex_);
+  std::lock_guard<std::mutex> lock(busMutex_);
   const auto& it = buses_.find(bus->getName());
   if (it == buses_.end()) {
     buses_.insert(std::make_pair(bus->getName(), std::unique_ptr<soem_interface_rsl::EthercatBusBase>(bus)));
@@ -47,7 +47,7 @@ bool EthercatBusManagerBase::addEthercatBus(std::unique_ptr<soem_interface_rsl::
     return false;
   }
 
-  std::lock_guard<std::recursive_mutex> lock(busMutex_);
+  std::lock_guard<std::mutex> lock(busMutex_);
   const auto& it = buses_.find(bus->getName());
   if (it == buses_.end()) {
     buses_.insert(std::make_pair(bus->getName(), std::move(bus)));
@@ -64,43 +64,43 @@ bool EthercatBusManagerBase::startupAllBuses() {
 }
 
 void EthercatBusManagerBase::setBussesOperational() {
-  std::lock_guard<std::recursive_mutex> lock(busMutex_);
+  std::lock_guard<std::mutex> lock(busMutex_);
   // Only set the state but do not wait for it, since some devices (e.g. junctions) might not be able to reach it.
   for (auto& bus : buses_) {
-    bus.second->setState(EC_STATE_OPERATIONAL);
+    bus.second->setState(ETHERCAT_SM_STATE::OPERATIONAL);
   }
 }
 
 void EthercatBusManagerBase::setBussesPreOperational() {
-  std::lock_guard<std::recursive_mutex> lock(busMutex_);
+  std::lock_guard<std::mutex> lock(busMutex_);
   // Only set the state but do not wait for it, since some devices (e.g. junctions) might not be able to reach it.
   for (auto& bus : buses_) {
-    bus.second->setState(EC_STATE_PRE_OP);
+    bus.second->setState(ETHERCAT_SM_STATE::PRE_OP);
   }
 }
 
 void EthercatBusManagerBase::setBussesSafeOperational() {
-  std::lock_guard<std::recursive_mutex> lock(busMutex_);
+  std::lock_guard<std::mutex> lock(busMutex_);
   // Only set the state but do not wait for it, since some devices (e.g. junctions) might not be able to reach it.
   for (auto& bus : buses_) {
-    bus.second->setState(EC_STATE_SAFE_OP);
+    bus.second->setState(ETHERCAT_SM_STATE::SAFE_OP);
   }
 }
 
 void EthercatBusManagerBase::waitForState(const uint16_t state, const uint16_t slave, const std::string busName,
-                                          const unsigned int maxRetries, const double retrySleep) {
-  std::lock_guard<std::recursive_mutex> lock(busMutex_);
+                                          const unsigned int maxRetries) {
+  std::lock_guard<std::mutex> lock(busMutex_);
   if (busName.empty()) {
     for (auto& bus : buses_) {
-      bus.second->waitForState(state, slave, maxRetries, retrySleep);
+      bus.second->waitForState(state, slave, maxRetries);
     }
   } else {
-    buses_.at(busName)->waitForState(state, slave, maxRetries, retrySleep);
+    buses_.at(busName)->waitForState(state, slave, maxRetries);
   }
 }
 
 bool EthercatBusManagerBase::startupCommunication() {
-  std::lock_guard<std::recursive_mutex> lock(busMutex_);
+  std::lock_guard<std::mutex> lock(busMutex_);
   for (auto& bus : buses_) {
     if (!bus.second->startup()) {
       MELO_ERROR_STREAM("Failed to startup bus '" << bus.first << "'.");
@@ -111,21 +111,21 @@ bool EthercatBusManagerBase::startupCommunication() {
 }
 
 void EthercatBusManagerBase::readAllBuses() {
-  std::lock_guard<std::recursive_mutex> lock(busMutex_);
+  std::lock_guard<std::mutex> lock(busMutex_);
   for (auto& bus : buses_) {
     bus.second->updateRead();
   }
 }
 
 void EthercatBusManagerBase::writeToAllBuses() {
-  std::lock_guard<std::recursive_mutex> lock(busMutex_);
+  std::lock_guard<std::mutex> lock(busMutex_);
   for (auto& bus : buses_) {
     bus.second->updateWrite();
   }
 }
 
 void EthercatBusManagerBase::shutdownAllBuses() {
-  std::lock_guard<std::recursive_mutex> lock(busMutex_);
+  std::lock_guard<std::mutex> lock(busMutex_);
   for (auto& bus : buses_) {
     bus.second->shutdown();
   }

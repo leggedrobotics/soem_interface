@@ -29,9 +29,32 @@
 #include <mutex>
 
 // message logger
+#include "soem_rsl_export.h"
 #include <message_logger/message_logger.hpp>
 
 namespace soem_interface_rsl {
+
+//namespaced export of the EC_STATE from soem for ethercat slave sdks.
+enum class SOEM_RSL_EXPORT ETHERCAT_SM_STATE : uint16_t {
+  /** No valid state. */
+  NONE = 0x00,
+  /** Init state*/
+  INIT = 0x01,
+  /** Pre-operational. */
+  PRE_OP = 0x02,
+  /** Boot state*/
+  BOOT = 0x03,
+  /** Safe-operational. */
+  SAFE_OP = 0x04,
+  /** Operational */
+  OPERATIONAL = 0x08,
+  /** Error or ACK error */
+  ACK = 0x10,
+  ERROR = 0x10
+};
+
+
+
 namespace common {
 
 class MessageLog {
