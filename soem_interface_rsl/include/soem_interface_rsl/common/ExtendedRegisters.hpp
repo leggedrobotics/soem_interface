@@ -5,7 +5,7 @@
 #ifndef ETHERCAT_WS_EXTENDEDREGISTERS_HPP
 #define ETHERCAT_WS_EXTENDEDREGISTERS_HPP
 
-#include <ethercat.h>
+#include <soem_rsl/ethercat.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <array>

@@ -24,7 +24,7 @@
 #include <string.h>
 #include <inttypes.h>
 
-#include "ethercat.h"
+#include <soem_rsl/ethercat.h>
 
 #define EC_TIMEOUTMON 500
 

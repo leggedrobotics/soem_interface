@@ -31,7 +31,7 @@
 #include <vector>
 
 // soem_rsl
-#include <ethercat.h>
+#include <soem_rsl/ethercat.h>
 
 #include <message_logger/message_logger.hpp>
 

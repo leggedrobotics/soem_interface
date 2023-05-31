@@ -21,7 +21,7 @@
 #include <pthread.h>
 #include <math.h>
 
-#include "ethercat.h"
+#include <soem_rsl/ethercat.h>
 
 #define NSEC_PER_SEC 1000000000
 

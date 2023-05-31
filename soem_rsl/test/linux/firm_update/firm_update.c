@@ -18,7 +18,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-#include "ethercat.h"
+#include <soem_rsl/ethercat.h>
 
 #define FWBUFSIZE (8 * 1024 * 1024)
 

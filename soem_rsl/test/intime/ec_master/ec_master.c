@@ -36,7 +36,7 @@
 #include <rt.h>
 #include <traceapi.h>
 
-#include "ethercat.h"
+#include <soem_rsl/ethercat.h>
 
 
 char IOmap[4096];
