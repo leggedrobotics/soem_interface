@@ -46,7 +46,7 @@ namespace soem_interface_rsl {
 class EthercatSlaveBase;
 using EthercatSlaveBasePtr = std::shared_ptr<EthercatSlaveBase>;
 
-//Template Adatper for pImpl Design with Templates. https://en.cppreference.com/w/cpp/language/pimpl
+// Template Adatper for pImpl Design with Templates. https://en.cppreference.com/w/cpp/language/pimpl
 class SOEM_RSL_EXPORT EthercatBusBaseTemplateAdapter {
  private:
   struct EthercatSlaveBaseImpl;
@@ -69,7 +69,7 @@ class SOEM_RSL_EXPORT EthercatBusBaseTemplateAdapter {
  * @brief      Class for managing an ethercat bus containing one or multpile
  *             slaves
  */
-class SOEM_RSL_EXPORT EthercatBusBase : private EthercatBusBaseTemplateAdapter{
+class SOEM_RSL_EXPORT EthercatBusBase : private EthercatBusBaseTemplateAdapter {
  public:
   using PdoSizePair = std::pair<uint16_t, uint16_t>;
   using PdoSizeMap = std::unordered_map<std::string, PdoSizePair>;
@@ -91,7 +91,6 @@ class SOEM_RSL_EXPORT EthercatBusBase : private EthercatBusBaseTemplateAdapter{
    * @return Name of the bus.
    */
   const std::string& getName() const;
-
 
   /*!
    * Check if a bus is available.
@@ -153,7 +152,6 @@ class SOEM_RSL_EXPORT EthercatBusBase : private EthercatBusBaseTemplateAdapter{
    */
   const std::chrono::time_point<std::chrono::high_resolution_clock>& getUpdateWriteStamp() const;
 
-
   /*!
    * Shutdown the bus communication.
    */
@@ -165,7 +163,6 @@ class SOEM_RSL_EXPORT EthercatBusBase : private EthercatBusBaseTemplateAdapter{
    * @param slave Address of the slave, 0 for all slaves.
    */
   void setState(const uint16_t state, const uint16_t slave = 0);
-
 
   /*!
    * Set the desired EtherCAT state machine state.
@@ -182,7 +179,7 @@ class SOEM_RSL_EXPORT EthercatBusBase : private EthercatBusBaseTemplateAdapter{
    * @return True if the state has been reached within the timeout.
    */
   bool waitForState(const uint16_t state, const uint16_t slave = 0, const unsigned int maxRetries = 40);
-  bool waitForState(ETHERCAT_SM_STATE state, const uint16_t slave= 0, const unsigned int maxRetries = 40);
+  bool waitForState(ETHERCAT_SM_STATE state, const uint16_t slave = 0, const unsigned int maxRetries = 40);
 
   /*!
    * Reads the ethercat state machine state, updates the state information of all slaves.
@@ -209,15 +206,12 @@ class SOEM_RSL_EXPORT EthercatBusBase : private EthercatBusBaseTemplateAdapter{
 
   bool getBusDiagnosisLog(BusDiagnosisLog& busDiagnosisLogOut);
 
-
   /*!
    * Generate and return the state string.
    * @param state EtherCAT.
    * @return The state string for logging.
    */
   static std::string getStateString(uint16_t state);
-
-
 
   /*!
    * Synchronize the distributed clocks.
@@ -238,7 +232,6 @@ class SOEM_RSL_EXPORT EthercatBusBase : private EthercatBusBaseTemplateAdapter{
    *             sizes
    */
   PdoSizeMap getHardwarePdoSizes();
-
 
   /*!
    * Send a writing SDO.
@@ -280,7 +273,6 @@ class SOEM_RSL_EXPORT EthercatBusBase : private EthercatBusBaseTemplateAdapter{
    * @return True if successful.
    */
   bool sendSdoReadVisibleString(const uint16_t slave, const uint16_t index, const uint8_t subindex, std::string& value);
-
 
   /*!
    * Check if the bus is ok.

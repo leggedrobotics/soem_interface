@@ -117,6 +117,7 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl {
           // Successful initialization.
           break;
         } else if (retry == ecatConfigMaxRetries_) {
+          ecx_close(&ecatContext_);
           // Too many failed attempts.
           MELO_ERROR_STREAM("[soem_interface_rsl::" << name_ << "] "
                                                     << "No slaves have been found.");
@@ -128,6 +129,14 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl {
       }
 
       int nSlaves = *ecatContext_.slavecount;
+      if (nSlaves != static_cast<int>(slaves_.size())) {
+        // make sure we got all slaves, in case some wired startup happens when not all slaves are ready at the time of slave discovery.
+        MELO_ERROR_STREAM("[soem_interface_rsl::" << name_
+                                                  << "] Different Number of slaves on the bus than in configuration. Closing Socket.")
+        ecx_close(&ecatContext_);
+        return false;
+      }
+
       // Print the slaves which have been detected.
       MELO_INFO_STREAM("[soem_interface_rsl::" << name_ << "] The following " << nSlaves << " slaves have been found and configured:");
       for (int slave = 1; slave <= nSlaves; slave++) {
@@ -152,6 +161,7 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl {
         }
       }
       if (!slaveAddressesAreOk) {
+        ecx_close(&ecatContext_);
         return false;
       }
 
@@ -288,15 +298,17 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl {
   const std::chrono::time_point<std::chrono::high_resolution_clock>& getUpateWriteStamp() const { return updateWriteStamp_; }
 
   void shutdown() {
-    std::lock_guard<std::mutex> guard(contextMutex_);
-    // Set the slaves to state Init.
-    if (*ecatContext_.slavecount > 0) {
-      setStateLocked(EC_STATE_INIT);
-      waitForStateLocked(EC_STATE_INIT);
-    }
+    if (initlialized_) {
+      std::lock_guard<std::mutex> guard(contextMutex_);
+      // Set the slaves to state Init.
+      if (*ecatContext_.slavecount > 0) {
+        setStateLocked(EC_STATE_INIT);
+        waitForStateLocked(EC_STATE_INIT);
+      }
 
-    for (auto& slave : slaves_) {
-      slave->shutdown();
+      for (auto& slave : slaves_) {
+        slave->shutdown();
+      }
     }
 
     // Close the port.
@@ -727,7 +739,7 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl {
   std::chrono::time_point<std::chrono::high_resolution_clock> updateWriteStamp_;
 
   //! Maximal number of retries to configure the EtherCAT bus.
-  const unsigned int ecatConfigMaxRetries_{5};
+  const unsigned int ecatConfigMaxRetries_{10};
   //! Time to sleep between the retries.
   const double ecatConfigRetrySleep_{1.0};
 
@@ -969,7 +981,6 @@ bool EthercatBusBase::sendSdoReadVisibleString(const uint16_t slave, const uint1
 
   value.clear();
   for (int i = 0; i < readLength; ++i) {
-    MELO_DEBUG_STREAM("Char (int): " << static_cast<unsigned int>(buffer[i]))
     if (buffer[i] != 0x0) {
       value += buffer[i];
     } else {
