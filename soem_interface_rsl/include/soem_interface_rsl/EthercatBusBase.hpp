@@ -47,15 +47,19 @@ class EthercatSlaveBase;
 using EthercatSlaveBasePtr = std::shared_ptr<EthercatSlaveBase>;
 
 //Template Adatper for pImpl Design with Templates. https://en.cppreference.com/w/cpp/language/pimpl
-class SOEM_RSL_EXPORT EthercatBusBaseTemplateAdapter{
+class SOEM_RSL_EXPORT EthercatBusBaseTemplateAdapter {
  private:
   struct EthercatSlaveBaseImpl;
+
  protected:
   std::unique_ptr<EthercatSlaveBaseImpl> pImpl_;
   bool sdoWriteForward(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, int size, void* buf);
   bool sdoReadForward(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, int size, void* buf);
+  int sdoReadSizeForward(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, int size,
+                         void* buf);
   void readTxPdoForward(const uint16_t slave, int size, void* buf) const;
   void writeRxPdoForward(const uint16_t slave, int size, const void* buf);
+
  public:
   explicit EthercatBusBaseTemplateAdapter(const std::string& name);
   ~EthercatBusBaseTemplateAdapter();

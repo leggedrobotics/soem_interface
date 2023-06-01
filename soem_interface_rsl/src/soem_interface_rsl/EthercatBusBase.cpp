@@ -164,6 +164,7 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl {
       initlialized_ = true;
       setStateLocked(EC_STATE_PRE_OP);
       waitForStateLocked(EC_STATE_PRE_OP, 0);
+    }
     //  MELO_DEBUG_STREAM("[EthercatBus] Bus Startup: Set all salves to SAFE_OP")
 
     // Initialize the communication interfaces of all slaves.
@@ -177,7 +178,7 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl {
       }
     }
 
-      std::lock_guard<std::mutex> contextLock(contextMutex_);
+    std::lock_guard<std::mutex> contextLock(contextMutex_);
     // Set up the communication IO mapping.
     // Note: ecx_config_map_group(..) requests the slaves to go to SAFE-OP.
     [[maybe_unused]] int ioMapSize = ecx_config_map_group(&ecatContext_, &ioMap_, 0);
@@ -515,6 +516,34 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl {
     return true;
   }
 
+  int sdoReadSize(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, int size, void* buf) {
+    int wkc = 0;
+    {
+      assert(static_cast<int>(slave) <= *ecatContext_.slavecount);
+      std::lock_guard<std::mutex> guard(contextMutex_);
+      wkc = ecx_SDOread(&ecatContext_, slave, index, subindex, static_cast<boolean>(completeAccess), &size, buf, EC_TIMEOUTRXM);
+    }
+    if (wkc <= 0) {
+      MELO_ERROR_STREAM("Slave " << slave << ": Working counter too low (" << wkc << ") for reading SDO (ID: 0x" << std::setfill('0')
+                                 << std::setw(4) << std::hex << index << ", SID 0x" << std::setfill('0') << std::setw(2) << std::hex
+                                 << static_cast<uint16_t>(subindex) << ").");
+
+      checkForSdoErrors(slave, index);
+      if (slave == 0) {
+        MELO_INFO_STREAM("[soem_interface_rsl::" << name_ << "] Worst AL status code of all slaves, alStatusCode: 0x" << std::setfill('0')
+                                                 << std::setw(8) << std::hex << ecatContext_.slavelist[slave].ALstatuscode << " "
+                                                 << ec_ALstatuscode2string(ecatContext_.slavelist[slave].ALstatuscode));
+      } else {
+        MELO_INFO_STREAM("[soem_interface_rsl::" << name_ << "] Slave: " << slaves_[slave - 1]->getName() << " alStatusCode: 0x"
+                                                 << std::setfill('0') << std::setw(8) << std::hex
+                                                 << ecatContext_.slavelist[slave].ALstatuscode << " "
+                                                 << ec_ALstatuscode2string(ecatContext_.slavelist[slave].ALstatuscode));
+      }
+      return 0;
+    }
+    return size;
+  }
+
   void readTxPdo(const uint16_t slave, int size, void* buf) const {
     assert(static_cast<int>(slave) <= *ecatContext_.slavecount);
     std::lock_guard<std::mutex> guard(contextMutex_);
@@ -794,6 +823,11 @@ bool EthercatBusBaseTemplateAdapter::sdoReadForward(const uint16_t slave, const 
   return pImpl_->sdoRead(slave, index, subindex, completeAccess, size, buf);
 }
 
+int EthercatBusBaseTemplateAdapter::sdoReadSizeForward(const uint16_t slave, const uint16_t index, const uint8_t subindex,
+                                                       const bool completeAccess, int size, void* buf) {
+  return pImpl_->sdoReadSize(slave, index, subindex, completeAccess, size, buf);
+}
+
 void EthercatBusBaseTemplateAdapter::readTxPdoForward(const uint16_t slave, int size, void* buf) const {
   pImpl_->readTxPdo(slave, size, buf);
 }
@@ -928,13 +962,13 @@ bool EthercatBusBase::sendSdoReadVisibleString(const uint16_t slave, const uint1
   char buffer[128];
   int length = sizeof(buffer) - 1;
 
-  if (!sdoReadForward(slave, index, subindex, static_cast<boolean>(false), length, &buffer)) {
+  int readLength = sdoReadSizeForward(slave, index, subindex, static_cast<boolean>(false), length, &buffer);
+  if (readLength == 0) {
     return false;
   }
 
   value.clear();
-  for (int i = 0; i < length; ++i) {
-    MELO_DEBUG_STREAM("Char      : " << buffer[i])
+  for (int i = 0; i < readLength; ++i) {
     MELO_DEBUG_STREAM("Char (int): " << static_cast<unsigned int>(buffer[i]))
     if (buffer[i] != 0x0) {
       value += buffer[i];
