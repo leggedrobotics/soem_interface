@@ -164,7 +164,8 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl {
       initlialized_ = true;
       setStateLocked(EC_STATE_PRE_OP);
       waitForStateLocked(EC_STATE_PRE_OP, 0);
-    //  MELO_DEBUG_STREAM("[EthercatBus] Bus Startup: Set all salves to SAFE_OP")
+      MELO_DEBUG_STREAM("[EthercatBus] Bus Startup: Set all salves to SAFE_OP")
+    }
 
     // Initialize the communication interfaces of all slaves.
     for (auto& slave : slaves_) {
@@ -177,7 +178,7 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl {
       }
     }
 
-      std::lock_guard<std::mutex> contextLock(contextMutex_);
+    std::lock_guard<std::mutex> contextLock(contextMutex_);
     // Set up the communication IO mapping.
     // Note: ecx_config_map_group(..) requests the slaves to go to SAFE-OP.
     [[maybe_unused]] int ioMapSize = ecx_config_map_group(&ecatContext_, &ioMap_, 0);
