@@ -27,7 +27,7 @@
 
 namespace soem_interface_rsl {
 
-static bool busIsAvailable(const std::string& name){
+static bool busIsAvailable(const std::string& name) {
   ec_adaptert* adapter = ec_find_adapters();
   while (adapter != nullptr) {
     if (name == std::string(adapter->name)) {
@@ -38,10 +38,9 @@ static bool busIsAvailable(const std::string& name){
   return false;
 }
 
-
-struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl{
+struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl {
   EthercatSlaveBaseImpl() = delete;
-  explicit EthercatSlaveBaseImpl(const std::string name) : name_(name), wkc_(0){
+  explicit EthercatSlaveBaseImpl(const std::string name) : name_(name), wkc_(0) {
     // Initialize all soem_rsl context data pointers that are not used with null.
     ecatContext_.elist->head = 0;
     ecatContext_.elist->tail = 0;
@@ -57,16 +56,12 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl{
     ecatContext_.FOEhook = nullptr;
   }
 
-  const std::string& getName()const{
-    return name_;
-  }
+  const std::string& getName() const { return name_; }
 
-  bool busIsAvailable() const{
-    return soem_interface_rsl::busIsAvailable(name_);
-  }
+  bool busIsAvailable() const { return soem_interface_rsl::busIsAvailable(name_); }
 
-  int getNumberOfSlaves() const{
-    if(!initlialized_){
+  int getNumberOfSlaves() const {
+    if (!initlialized_) {
       MELO_WARN_STREAM("[SOEM_Interface] requesting number of slaves on not inited bus.")
       return 0;
     }
@@ -74,7 +69,7 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl{
     return *ecatContext_.slavecount;
   }
 
-  bool addSlave(const EthercatSlaveBasePtr& slave){
+  bool addSlave(const EthercatSlaveBasePtr& slave) {
     for (const auto& existingSlave : slaves_) {
       if (slave->getAddress() == existingSlave->getAddress()) {
         MELO_ERROR_STREAM("[" << name_ << "] "
@@ -91,13 +86,13 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl{
     return true;
   }
 
-  bool startup(const bool sizeCheck){
+  bool startup(const bool sizeCheck) {
     /*
-   * Followed by start of the application we need to set up the NIC to be used as
-   * EtherCAT Ethernet interface. In a simple setup we call ec_init(ifname) and if
-   * soem_rsl comes with support for cable redundancy we call ec_init_redundant that
-   * will open a second port as backup. You can send NULL as ifname if you have a
-   * dedicated NIC selected in the nicdrv.c. It returns >0 if succeeded.
+     * Followed by start of the application we need to set up the NIC to be used as
+     * EtherCAT Ethernet interface. In a simple setup we call ec_init(ifname) and if
+     * soem_rsl comes with support for cable redundancy we call ec_init_redundant that
+     * will open a second port as backup. You can send NULL as ifname if you have a
+     * dedicated NIC selected in the nicdrv.c. It returns >0 if succeeded.
      */
 
     if (!busIsAvailable()) {
@@ -107,74 +102,73 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl{
       return false;
     }
 
-    std::lock_guard<std::mutex> contextLock(contextMutex_);
-    if (ecx_init(&ecatContext_, name_.c_str()) <= 0) {
-      MELO_ERROR_STREAM("[" << name_ << "] "
-                            << "No socket connection. Execute as root.");
-      return false;
-    }
-
-    // Initialize soem_rsl.
-    // Note: ecx_config_init(..) requests the slaves to go to PRE-OP.
-    for (unsigned int retry = 0; retry <= ecatConfigMaxRetries_; retry++) {
-      if (ecx_config_init(&ecatContext_, FALSE) > 0) {
-        // Successful initialization.
-        break;
-      } else if (retry == ecatConfigMaxRetries_) {
-        // Too many failed attempts.
-        MELO_ERROR_STREAM("[soem_interface_rsl::" << name_ << "] "
-                                                  << "No slaves have been found.");
+    {
+      std::lock_guard<std::mutex> contextLock(contextMutex_);
+      if (ecx_init(&ecatContext_, name_.c_str()) <= 0) {
+        MELO_ERROR_STREAM("[" << name_ << "] "
+                              << "No socket connection. Execute as root.");
         return false;
       }
-      // Sleep and retry.
-      soem_interface_rsl::threadSleep(ecatConfigRetrySleep_);
-      MELO_INFO_STREAM("No slaves have been found, retrying " << retry + 1 << "/" << ecatConfigMaxRetries_ << " ...");
-    }
 
-
-    int nSlaves = *ecatContext_.slavecount;
-    // Print the slaves which have been detected.
-    MELO_INFO_STREAM("[soem_interface_rsl::" << name_ << "] The following " << nSlaves
-                                             << " slaves have been found and configured:");
-    for (int slave = 1; slave <= nSlaves; slave++) {
-      MELO_INFO_STREAM("[soem_interface_rsl::" << name_ << "] Address: " << slave << " - Name: '"
-                                               << std::string(ecatContext_.slavelist[slave].name) << "'");
-    }
-
-    // Check if the given slave addresses are valid.
-    bool slaveAddressesAreOk = true;
-    for (const auto& slave : slaves_) {
-      auto address = static_cast<int>(slave->getAddress());
-      if (address == 0) {
-        MELO_ERROR_STREAM("[soem_interface_rsl::" << name_ << "] "
-                                                  << "Slave '" << slave->getName() << "': Invalid address " << address << ".");
-        slaveAddressesAreOk = false;
+      // Initialize soem_rsl.
+      // Note: ecx_config_init(..) requests the slaves to go to PRE-OP.
+      for (unsigned int retry = 0; retry <= ecatConfigMaxRetries_; retry++) {
+        if (ecx_config_init(&ecatContext_, FALSE) > 0) {
+          // Successful initialization.
+          break;
+        } else if (retry == ecatConfigMaxRetries_) {
+          // Too many failed attempts.
+          MELO_ERROR_STREAM("[soem_interface_rsl::" << name_ << "] "
+                                                    << "No slaves have been found.");
+          return false;
+        }
+        // Sleep and retry.
+        soem_interface_rsl::threadSleep(ecatConfigRetrySleep_);
+        MELO_INFO_STREAM("No slaves have been found, retrying " << retry + 1 << "/" << ecatConfigMaxRetries_ << " ...");
       }
-      if (address > nSlaves) {
-        MELO_ERROR_STREAM("[soem_interface_rsl::" << name_ << "] "
-                                                  << "Slave '" << slave->getName() << "': Invalid address " << address << ", "
-                                                  << "only " << nSlaves << " slave(s) found.");
-        slaveAddressesAreOk = false;
+
+      int nSlaves = *ecatContext_.slavecount;
+      // Print the slaves which have been detected.
+      MELO_INFO_STREAM("[soem_interface_rsl::" << name_ << "] The following " << nSlaves << " slaves have been found and configured:");
+      for (int slave = 1; slave <= nSlaves; slave++) {
+        MELO_INFO_STREAM("[soem_interface_rsl::" << name_ << "] Address: " << slave << " - Name: '"
+                                                 << std::string(ecatContext_.slavelist[slave].name) << "'");
       }
-    }
-    if (!slaveAddressesAreOk) {
-      return false;
-    }
 
-    // Disable symmetrical transfers.
-    ecatContext_.grouplist[0].blockLRW = 1;
+      // Check if the given slave addresses are valid.
+      bool slaveAddressesAreOk = true;
+      for (const auto& slave : slaves_) {
+        auto address = static_cast<int>(slave->getAddress());
+        if (address == 0) {
+          MELO_ERROR_STREAM("[soem_interface_rsl::" << name_ << "] "
+                                                    << "Slave '" << slave->getName() << "': Invalid address " << address << ".");
+          slaveAddressesAreOk = false;
+        }
+        if (address > nSlaves) {
+          MELO_ERROR_STREAM("[soem_interface_rsl::" << name_ << "] "
+                                                    << "Slave '" << slave->getName() << "': Invalid address " << address << ", "
+                                                    << "only " << nSlaves << " slave(s) found.");
+          slaveAddressesAreOk = false;
+        }
+      }
+      if (!slaveAddressesAreOk) {
+        return false;
+      }
 
-    // some slave might require SAFE_OP during setup...
-    busDiagnosisLog_.errorCounters_.resize(slaves_.size());
-    nSlaves_ = slaves_.size();
-    initlialized_ = true;
-    setStateLocked(EC_STATE_PRE_OP);
-    waitForStateLocked(EC_STATE_PRE_OP, 0);
+      // Disable symmetrical transfers.
+      ecatContext_.grouplist[0].blockLRW = 1;
+
+      // some slave might require SAFE_OP during setup...
+      busDiagnosisLog_.errorCounters_.resize(slaves_.size());
+      nSlaves_ = slaves_.size();
+      initlialized_ = true;
+      setStateLocked(EC_STATE_PRE_OP);
+      waitForStateLocked(EC_STATE_PRE_OP, 0);
     //  MELO_DEBUG_STREAM("[EthercatBus] Bus Startup: Set all salves to SAFE_OP")
 
     // Initialize the communication interfaces of all slaves.
     for (auto& slave : slaves_) {
-      MELO_DEBUG_STREAM("[soem_interface_rsl::" << name_ << "] Starting slave: " << slave->getName())
+      MELO_INFO_STREAM("[soem_interface_rsl::" << name_ << "] Starting slave: " << slave->getName())
       if (!slave->startup()) {
         MELO_ERROR_STREAM("[soem_interface_rsl::" << name_ << "] Slave '" << slave->getName() << "' was not initialized successfully.");
         return false;
@@ -183,6 +177,7 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl{
       }
     }
 
+      std::lock_guard<std::mutex> contextLock(contextMutex_);
     // Set up the communication IO mapping.
     // Note: ecx_config_map_group(..) requests the slaves to go to SAFE-OP.
     [[maybe_unused]] int ioMapSize = ecx_config_map_group(&ecatContext_, &ioMap_, 0);
@@ -227,7 +222,7 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl{
     return true;
   }
 
-  void updateRead(){
+  void updateRead() {
     if (!sentProcessData_) {
       MELO_DEBUG_STREAM("No process data to read.");
       return;
@@ -270,7 +265,7 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl{
     }
   }
 
-  void updateWrite(){
+  void updateWrite() {
     if (sentProcessData_) {
       MELO_DEBUG_STREAM("[soem_interface_rsl] Sending new process data without reading the previous one.");
     }
@@ -287,16 +282,11 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl{
     sentProcessData_ = true;
   }
 
-  const std::chrono::time_point<std::chrono::high_resolution_clock>& getUpdateReadStamp() const{
-    return updateReadStamp_;
-  }
+  const std::chrono::time_point<std::chrono::high_resolution_clock>& getUpdateReadStamp() const { return updateReadStamp_; }
 
-  const std::chrono::time_point<std::chrono::high_resolution_clock>& getUpateWriteStamp() const{
-    return updateWriteStamp_;
-  }
+  const std::chrono::time_point<std::chrono::high_resolution_clock>& getUpateWriteStamp() const { return updateWriteStamp_; }
 
-
-  void shutdown(){
+  void shutdown() {
     std::lock_guard<std::mutex> guard(contextMutex_);
     // Set the slaves to state Init.
     if (*ecatContext_.slavecount > 0) {
@@ -310,7 +300,7 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl{
 
     // Close the port.
     if (ecatContext_.port != nullptr) {
-      MELO_INFO_STREAM("[soem_interface_rsl::"<<name_ <<"] Closing socket ...");
+      MELO_INFO_STREAM("[soem_interface_rsl::" << name_ << "] Closing socket ...");
       ecx_close(&ecatContext_);
       // Sleep to make sure the socket is closed, because ecx_close is non-blocking.
       soem_interface_rsl::threadSleep(0.5);
@@ -318,17 +308,17 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl{
     initlialized_ = false;
   }
 
-  void setState(const uint16_t state, const uint16_t slave = 0){
+  void setState(const uint16_t state, const uint16_t slave = 0) {
     std::lock_guard<std::mutex> guard(contextMutex_);
     setStateLocked(state, slave);
   }
 
-  bool waitForState(const uint16_t state, const uint16_t slave = 0, const unsigned int maxRetries = 20){
+  bool waitForState(const uint16_t state, const uint16_t slave = 0, const unsigned int maxRetries = 20) {
     std::lock_guard<std::mutex> guard(contextMutex_);
     return waitForStateLocked(state, slave, maxRetries);
   }
 
-  int getState(const uint16_t slave){
+  int getState(const uint16_t slave) {
     std::lock_guard<std::mutex> guard(contextMutex_);
     int lowest_state = ecx_readstate(&ecatContext_);
 
@@ -341,11 +331,9 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl{
     return static_cast<int>(ecatContext_.slavelist[slave].state);
   }
 
-  bool busIsOk() const{
-   return workingCounterTooLowCounter_ < maxWorkingCounterTooLow_;
-  }
+  bool busIsOk() const { return workingCounterTooLowCounter_ < maxWorkingCounterTooLow_; }
 
-  bool doBusMonitoring(bool logErrorCounterForDiagnosis){
+  bool doBusMonitoring(bool logErrorCounterForDiagnosis) {
     if (!initlialized_) {
       return false;
     }
@@ -369,12 +357,14 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl{
       if ((lowestSlaveState & 0x0f) < EC_STATE_OPERATIONAL) {  // if ECAT Error bus state is e.g. 0x14 = 0x10 (error) + 0x04 (safeOP)
         MELO_WARN_STREAM("[EthercatBus::BusMonitoring::" << name_ << "] No all slaves in EC_STATE_OPERATIONAL")
         for (const auto& slave : slaves_) {
-          MELO_WARN_STREAM("[EthercatBus::BusMonitoring::" << name_ << "] Slave: " << slave->getName() << " in state: "
-                                                           << EthercatBusBase::getStateString(ecatContext_.slavelist[slave->getAddress()].state))
+          MELO_WARN_STREAM("[EthercatBus::BusMonitoring::"
+                           << name_ << "] Slave: " << slave->getName()
+                           << " in state: " << EthercatBusBase::getStateString(ecatContext_.slavelist[slave->getAddress()].state))
 
           if ((ecatContext_.slavelist[slave->getAddress()].state & 0x0f) < EC_STATE_OPERATIONAL) {
             MELO_INFO_STREAM("[soem_interface_rsl::" << name_ << "] Slave: " << slave->getName() << " alStatusCode: 0x" << std::setfill('0')
-                                                     << std::setw(8) << std::hex << ecatContext_.slavelist[slave->getAddress()].ALstatuscode << " "
+                                                     << std::setw(8) << std::hex << ecatContext_.slavelist[slave->getAddress()].ALstatuscode
+                                                     << " "
                                                      << ec_ALstatuscode2string(ecatContext_.slavelist[slave->getAddress()].ALstatuscode));
 
             if (ecatContext_.slavelist[slave->getAddress()].state == EC_STATE_NONE && !ecatContext_.slavelist[slave->getAddress()].islost) {
@@ -382,8 +372,8 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl{
               MELO_ERROR_STREAM("[EthercatBus::BusMonitoring] Slave: "
                                 << slave->getName() << " no valid state read - slave probably lost - check your cables ;-) !")
               // todo  Trying to recover the lost slave. !NOT IMPLEMENTED! example: in soem_rsl simple_test.c
-              // slave (sdks) would require an optional virtual method, something like: slave->recover() in case they loose connection. (could
-              // fix partially shacky cables in software..)
+              // slave (sdks) would require an optional virtual method, something like: slave->recover() in case they loose connection.
+              // (could fix partially shacky cables in software..)
             }
           }
         }
@@ -420,8 +410,8 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl{
           currentRegNo++;
         }
       } else {
-        MELO_WARN_STREAM("[soem_interface_rsl::BusMonitoring::" << name_
-                                                                << "] Could not read Error counters for slave: " << selectedSlave->getName())
+        MELO_WARN_STREAM(
+            "[soem_interface_rsl::BusMonitoring::" << name_ << "] Could not read Error counters for slave: " << selectedSlave->getName())
       }
       busDiagOfCurrentSlave_++;
       if (busDiagOfCurrentSlave_ >= nSlaves_) {
@@ -442,8 +432,8 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl{
     return false;
   }
 
-  void syncDistributedClock0(const uint16_t slave, const bool activate, const double cycleTime, const double cycleShift){
-    //todo verify!
+  void syncDistributedClock0(const uint16_t slave, const bool activate, const double cycleTime, const double cycleShift) {
+    // todo verify!
     MELO_INFO_STREAM("Bus '" << name_ << "', slave " << slave << ":  " << (activate ? "Activating" : "Deactivating")
                              << " distributed clock synchronization...");
 
@@ -454,7 +444,7 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl{
                              << " distributed clock synchronization.");
   }
 
-  EthercatBusBase::PdoSizeMap getHardwarePdoSizes(){
+  EthercatBusBase::PdoSizeMap getHardwarePdoSizes() {
     EthercatBusBase::PdoSizeMap pdoMap;
 
     for (const auto& slave : slaves_) {
@@ -463,8 +453,7 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl{
     return pdoMap;
   }
 
-  bool sdoWrite(const uint16_t slave, const uint16_t index, const uint8_t subindex,
-               const bool completeAccess, int size, void* buf){
+  bool sdoWrite(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, int size, void* buf) {
     int wkc = 0;
     {
       assert(static_cast<int>(slave) <= *ecatContext_.slavecount);
@@ -482,17 +471,16 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl{
                                                  << ec_ALstatuscode2string(ecatContext_.slavelist[slave].ALstatuscode));
       } else {
         MELO_INFO_STREAM("[soem_interface_rsl::" << name_ << "] Slave: " << slaves_[slave - 1]->getName() << " alStatusCode: 0x"
-                                                 << std::setfill('0') << std::setw(8) << std::hex << ecatContext_.slavelist[slave].ALstatuscode
-                                                 << " " << ec_ALstatuscode2string(ecatContext_.slavelist[slave].ALstatuscode));
+                                                 << std::setfill('0') << std::setw(8) << std::hex
+                                                 << ecatContext_.slavelist[slave].ALstatuscode << " "
+                                                 << ec_ALstatuscode2string(ecatContext_.slavelist[slave].ALstatuscode));
       }
       return false;
     }
     return true;
-
   }
 
-  bool sdoRead(const uint16_t slave, const uint16_t index, const uint8_t subindex,
-               const bool completeAccess, int size, void* buf){
+  bool sdoRead(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, int size, void* buf) {
     int requestedSize = size;
     int wkc = 0;
     {
@@ -512,13 +500,14 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl{
                                                  << ec_ALstatuscode2string(ecatContext_.slavelist[slave].ALstatuscode));
       } else {
         MELO_INFO_STREAM("[soem_interface_rsl::" << name_ << "] Slave: " << slaves_[slave - 1]->getName() << " alStatusCode: 0x"
-                                                 << std::setfill('0') << std::setw(8) << std::hex << ecatContext_.slavelist[slave].ALstatuscode
-                                                 << " " << ec_ALstatuscode2string(ecatContext_.slavelist[slave].ALstatuscode));
+                                                 << std::setfill('0') << std::setw(8) << std::hex
+                                                 << ecatContext_.slavelist[slave].ALstatuscode << " "
+                                                 << ec_ALstatuscode2string(ecatContext_.slavelist[slave].ALstatuscode));
       }
       return false;
     }
     if (size != requestedSize) {
-      MELO_ERROR_STREAM("Slave " << slave << ": Size mismatch (expected " <<requestedSize << " bytes, read " << size
+      MELO_ERROR_STREAM("Slave " << slave << ": Size mismatch (expected " << requestedSize << " bytes, read " << size
                                  << " bytes) for reading SDO (ID: 0x" << std::setfill('0') << std::setw(4) << std::hex << index
                                  << ", SID 0x" << std::setfill('0') << std::setw(2) << std::hex << static_cast<uint16_t>(subindex) << ").");
       return false;
@@ -529,19 +518,19 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl{
   void readTxPdo(const uint16_t slave, int size, void* buf) const {
     assert(static_cast<int>(slave) <= *ecatContext_.slavecount);
     std::lock_guard<std::mutex> guard(contextMutex_);
-    assert(size == ecatContext_.slavelist[slave].Ibytes);
+    assert(size == (int)ecatContext_.slavelist[slave].Ibytes);
     memcpy(buf, ecatContext_.slavelist[slave].inputs, size);
   }
 
-  void writeRxPdo(const uint16_t slave, int size, const void* buf){
+  void writeRxPdo(const uint16_t slave, int size, const void* buf) {
     assert(static_cast<int>(slave) <= *ecatContext_.slavecount);
     std::lock_guard<std::mutex> guard(contextMutex_);
-    assert(ecatContext_.slavelist[slave].Obytes == size);
+    assert((int)ecatContext_.slavelist[slave].Obytes == size);
     memcpy(ecatContext_.slavelist[slave].outputs, buf, size);
   }
 
  private:
-  void setStateLocked(const uint16_t state, const uint16_t slave = 0){
+  void setStateLocked(const uint16_t state, const uint16_t slave = 0) {
     if (!initlialized_) {
       MELO_WARN_STREAM("[soem_interface_rsl::" << name_ << "] Bus " << name_ << " was not successfully initialized, skipping operation");
       return;
@@ -553,14 +542,15 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl{
     }
     ecx_writestate(&ecatContext_, slave);
     if (slave == 0) {
-      MELO_DEBUG_STREAM("[soem_interface_rsl::" << name_ << "] All slaves on State " << EthercatBusBase::getStateString(state) << " has been set.");
-    } else {
-      MELO_DEBUG_STREAM("[soem_interface_rsl::" << name_ << "] Slave " << slaves_[slave - 1]->getName() << " State " << EthercatBusBase::getStateString(state)
+      MELO_DEBUG_STREAM("[soem_interface_rsl::" << name_ << "] All slaves on State " << EthercatBusBase::getStateString(state)
                                                 << " has been set.");
+    } else {
+      MELO_DEBUG_STREAM("[soem_interface_rsl::" << name_ << "] Slave " << slaves_[slave - 1]->getName() << " State "
+                                                << EthercatBusBase::getStateString(state) << " has been set.");
     }
   }
 
-  bool waitForStateLocked(const uint16_t state, const uint16_t slave = 0, const unsigned int maxRetries = 20){
+  bool waitForStateLocked(const uint16_t state, const uint16_t slave = 0, const unsigned int maxRetries = 20) {
     if (!initlialized_) {
       MELO_WARN_STREAM("[soem_interface_rsl::" << name_ << "] Bus " << name_ << " was not successfully initialized, skipping operation");
       return false;
@@ -607,8 +597,9 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl{
                                                << ec_ALstatuscode2string(ecatContext_.slavelist[slave].ALstatuscode));
     } else {
       MELO_INFO_STREAM("[soem_interface_rsl::" << name_ << "] Slave: " << slaves_[slave - 1]->getName() << " alStatusCode: 0x"
-                                               << std::setfill('0') << std::setw(8) << std::hex << ecatContext_.slavelist[slave].ALstatuscode
-                                               << " " << ec_ALstatuscode2string(ecatContext_.slavelist[slave].ALstatuscode));
+                                               << std::setfill('0') << std::setw(8) << std::hex
+                                               << ecatContext_.slavelist[slave].ALstatuscode << " "
+                                               << ec_ALstatuscode2string(ecatContext_.slavelist[slave].ALstatuscode));
     }
     return false;
   }
@@ -652,7 +643,6 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl{
     }
     return stream.str();
   }
-
 
   /*!
    * Check if an error for the SDO index of the slave exists.
@@ -711,7 +701,6 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl{
   const unsigned int ecatConfigMaxRetries_{5};
   //! Time to sleep between the retries.
   const double ecatConfigRetrySleep_{1.0};
-
 
   //! Count working counter too low in a row.
   unsigned int workingCounterTooLowCounter_{0};
@@ -789,15 +778,14 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl{
                                0};
 };
 
+EthercatBusBaseTemplateAdapter::EthercatBusBaseTemplateAdapter(const std::string& name)
+    : pImpl_(std::make_unique<EthercatSlaveBaseImpl>(name)) {}
 
-
-EthercatBusBaseTemplateAdapter::EthercatBusBaseTemplateAdapter(const std::string& name) : pImpl_(std::make_unique<EthercatSlaveBaseImpl>(name)){}
-
-//has to be defined in cpp! otherwise EthercatBusBaseTemplateAdapter is incomplete type.
+// has to be defined in cpp! otherwise EthercatBusBaseTemplateAdapter is incomplete type.
 EthercatBusBaseTemplateAdapter::~EthercatBusBaseTemplateAdapter() = default;
 
 bool EthercatBusBaseTemplateAdapter::sdoWriteForward(const uint16_t slave, const uint16_t index, const uint8_t subindex,
-                                                    const bool completeAccess, int size, void* buf) {
+                                                     const bool completeAccess, int size, void* buf) {
   return pImpl_->sdoWrite(slave, index, subindex, completeAccess, size, buf);
 }
 
@@ -885,7 +873,6 @@ bool EthercatBusBase::busIsOk() const {
   return pImpl_->busIsOk();
 }
 
-
 std::string EthercatBusBase::getStateString(uint16_t state) {
   std::string stateStr{};
   switch (state & 0x0f) {
@@ -916,13 +903,12 @@ std::string EthercatBusBase::getStateString(uint16_t state) {
   return stateStr;
 }
 
-
 void EthercatBusBase::syncDistributedClock0(const uint16_t slave, const bool activate, const double cycleTime, const double cycleShift) {
   pImpl_->syncDistributedClock0(slave, activate, cycleTime, cycleShift);
 }
 
 EthercatBusBase::PdoSizeMap EthercatBusBase::getHardwarePdoSizes() {
- return pImpl_->getHardwarePdoSizes();
+  return pImpl_->getHardwarePdoSizes();
 }
 
 int EthercatBusBase::getState(const uint16_t slave) {
@@ -942,7 +928,7 @@ bool EthercatBusBase::sendSdoReadVisibleString(const uint16_t slave, const uint1
   char buffer[128];
   int length = sizeof(buffer) - 1;
 
-  if(!sdoReadForward(slave, index, subindex, static_cast<boolean>(false), length, &buffer)){
+  if (!sdoReadForward(slave, index, subindex, static_cast<boolean>(false), length, &buffer)) {
     return false;
   }
 
@@ -959,20 +945,17 @@ bool EthercatBusBase::sendSdoReadVisibleString(const uint16_t slave, const uint1
   return true;
 }
 
-
 const std::chrono::time_point<std::chrono::high_resolution_clock>& EthercatBusBase::getUpdateReadStamp() const {
   return pImpl_->getUpdateReadStamp();
 }
-
 
 const std::chrono::time_point<std::chrono::high_resolution_clock>& EthercatBusBase::getUpdateWriteStamp() const {
   return pImpl_->getUpateWriteStamp();
 }
 
-
 template <>
 bool EthercatBusBase::sendSdoRead<std::string>(const uint16_t slave, const uint16_t index, const uint8_t subindex,
-                              const bool completeAccess, std::string& value) {
+                                               const bool completeAccess, std::string& value) {
   assert(static_cast<int>(slave) <= getNumberOfSlaves());
   // Expected length of the string. String needs to be preallocated
   int size = value.length();
@@ -985,13 +968,12 @@ bool EthercatBusBase::sendSdoRead<std::string>(const uint16_t slave, const uint1
 
 template <>
 bool EthercatBusBase::sendSdoWrite<std::string>(const uint16_t slave, const uint16_t index, const uint8_t subindex,
-                               const bool completeAccess, const std::string value) {
+                                                const bool completeAccess, const std::string value) {
   assert(static_cast<int>(slave) <= getNumberOfSlaves());
   const int size = value.length();
   std::string valueCopy{value};
   char* dataPtr = valueCopy.data();
   return sdoWriteForward(slave, index, subindex, completeAccess, size, dataPtr);
 }
-
 
 }  // namespace soem_interface_rsl
