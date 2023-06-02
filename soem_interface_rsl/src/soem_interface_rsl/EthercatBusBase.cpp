@@ -86,7 +86,7 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl {
     return true;
   }
 
-  bool startup(const bool sizeCheck) {
+  bool startup(std::atomic<bool>& abortFlag, const bool sizeCheck, int maxDiscoverRetries) {
     /*
      * Followed by start of the application we need to set up the NIC to be used as
      * EtherCAT Ethernet interface. In a simple setup we call ec_init(ifname) and if
@@ -109,34 +109,39 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl {
                               << "No socket connection. Execute as root.");
         return false;
       }
-
-      // Initialize soem_rsl.
-      // Note: ecx_config_init(..) requests the slaves to go to PRE-OP.
-      for (unsigned int retry = 0; retry <= ecatConfigMaxRetries_; retry++) {
-        if (ecx_config_init(&ecatContext_, FALSE) > 0) {
-          // Successful initialization.
-          break;
-        } else if (retry == ecatConfigMaxRetries_) {
+      for (int retry = 0; retry <= maxDiscoverRetries; retry++) {
+        if (abortFlag) {
+          MELO_WARN_STREAM("[soem_interface_rsl::" << name_ << "] "
+                                                   << "Shutdown during waiting for slaves.");
           ecx_close(&ecatContext_);
-          // Too many failed attempts.
+          return false;  // avoid that executation continues.
+        }
+        if (ecx_detect_slaves(&ecatContext_) == static_cast<int>(slaves_.size())) {
+          // on some of the older (rsl) anydrives there seems to be a short race between bus is responsive and slave is fully ready...
+          // so give them this 1 sec to be fully ready to be started...
+          soem_interface_rsl::threadSleep(1.0);
+          break;
+        }
+        if (retry == maxDiscoverRetries) {
           MELO_ERROR_STREAM("[soem_interface_rsl::" << name_ << "] "
                                                     << "No slaves have been found.");
+          ecx_close(&ecatContext_);
           return false;
         }
         // Sleep and retry.
         soem_interface_rsl::threadSleep(ecatConfigRetrySleep_);
-        MELO_INFO_STREAM("No slaves have been found, retrying " << retry + 1 << "/" << ecatConfigMaxRetries_ << " ...");
+        MELO_INFO_STREAM("[soem_interface_rsl::" << name_ << "] No slaves have been found, retrying " << retry + 1 << "/"
+                                                 << maxDiscoverRetries << " ...");
+      }
+
+      // this should no work cleanly, since we're sure that all slaves are started.
+      if (ecx_config_init(&ecatContext_, FALSE) != static_cast<int>(slaves_.size())) {
+        ecx_close(&ecatContext_);
+        MELO_ERROR_STREAM("[soem_interface_rsl::" << name_ << "] "
+                                                  << "No slaves have been found.");
       }
 
       int nSlaves = *ecatContext_.slavecount;
-      if (nSlaves != static_cast<int>(slaves_.size())) {
-        // make sure we got all slaves, in case some wired startup happens when not all slaves are ready at the time of slave discovery.
-        MELO_ERROR_STREAM("[soem_interface_rsl::" << name_
-                                                  << "] Different Number of slaves on the bus than in configuration. Closing Socket.")
-        ecx_close(&ecatContext_);
-        return false;
-      }
-
       // Print the slaves which have been detected.
       MELO_INFO_STREAM("[soem_interface_rsl::" << name_ << "] The following " << nSlaves << " slaves have been found and configured:");
       for (int slave = 1; slave <= nSlaves; slave++) {
@@ -738,8 +743,6 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl {
   //! Time of the last successful PDO writing.
   std::chrono::time_point<std::chrono::high_resolution_clock> updateWriteStamp_;
 
-  //! Maximal number of retries to configure the EtherCAT bus.
-  const unsigned int ecatConfigMaxRetries_{10};
   //! Time to sleep between the retries.
   const double ecatConfigRetrySleep_{1.0};
 
@@ -883,8 +886,13 @@ bool EthercatBusBase::addSlave(const EthercatSlaveBasePtr& slave) {
   return pImpl_->addSlave(slave);
 }
 
-bool EthercatBusBase::startup(const bool sizeCheck) {
-  return pImpl_->startup(sizeCheck);
+bool EthercatBusBase::startup(const bool sizeCheck, int maxDiscoverRetries) {
+  std::atomic<bool> tmpAtomicForStart{false};
+  return pImpl_->startup(tmpAtomicForStart, sizeCheck, maxDiscoverRetries);
+}
+
+bool EthercatBusBase::startup(std::atomic<bool>& abortFlag, const bool sizeCheck, int maxDiscoverRetries) {
+  return pImpl_->startup(abortFlag, sizeCheck, maxDiscoverRetries);
 }
 
 void EthercatBusBase::updateRead() {

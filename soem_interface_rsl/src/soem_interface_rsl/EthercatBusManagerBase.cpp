@@ -102,7 +102,7 @@ void EthercatBusManagerBase::waitForState(const uint16_t state, const uint16_t s
 bool EthercatBusManagerBase::startupCommunication() {
   std::lock_guard<std::mutex> lock(busMutex_);
   for (auto& bus : buses_) {
-    if (!bus.second->startup()) {
+    if (!bus.second->startup(true)) {
       MELO_ERROR_STREAM("Failed to startup bus '" << bus.first << "'.");
       return false;
     }
