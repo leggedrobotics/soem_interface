@@ -336,17 +336,27 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl {
     return waitForStateLocked(state, slave, maxRetries);
   }
 
-  int getState(const uint16_t slave) {
-    std::lock_guard<std::mutex> guard(contextMutex_);
-    int lowest_state = ecx_readstate(&ecatContext_);
-
-    // ecx_readstate updates reads all slaves in worst case with one datagram per slaves, and or's all the ALStatusCodes.
-    // therefore we update here the bus AL StatusCode which is the OR of all slave's ALStatusCode!
-    busDiagnosisLog_.ecatApplicationLayerStatus = ecatContext_.slavelist[0].ALstatuscode;
-    if (slave == 0) {
-      return lowest_state;
+  ETHERCAT_SM_STATE getEthercatState(const uint16_t slave = 0) {
+    uint16_t stateRaw = getState(slave);
+    // check if Error
+    if ((stateRaw & 0xf0) == EC_STATE_ERROR) {
+      return ETHERCAT_SM_STATE::ERROR;
     }
-    return static_cast<int>(ecatContext_.slavelist[slave].state);
+    switch (stateRaw & 0x0f) {
+      case EC_STATE_INIT:
+        return ETHERCAT_SM_STATE::INIT;
+      case EC_STATE_BOOT:
+        return ETHERCAT_SM_STATE::BOOT;
+      case EC_STATE_PRE_OP:
+        return ETHERCAT_SM_STATE::PRE_OP;
+      case EC_STATE_SAFE_OP:
+        return ETHERCAT_SM_STATE::SAFE_OP;
+      case EC_STATE_OPERATIONAL:
+        return ETHERCAT_SM_STATE::OPERATIONAL;
+      default:
+        return ETHERCAT_SM_STATE::NONE;  // should not happen.
+    }
+    return ETHERCAT_SM_STATE::NONE;
   }
 
   bool busIsOk() const { return workingCounterTooLowCounter_ < maxWorkingCounterTooLow_; }
@@ -460,6 +470,11 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl {
 
     MELO_INFO_STREAM("Bus '" << name_ << "', slave " << slave << ":  " << (activate ? "Activated" : "Deactivated")
                              << " distributed clock synchronization.");
+  }
+
+  EthercatBusBase::PdoSizePair getHardwarePdoSizes(const uint16_t slave) {
+    std::lock_guard<std::mutex> guard(contextMutex_);
+    return std::make_pair(ecatContext_.slavelist[slave].Obytes, ecatContext_.slavelist[slave].Ibytes);
   }
 
   EthercatBusBase::PdoSizeMap getHardwarePdoSizes() {
@@ -576,6 +591,19 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl {
   }
 
  private:
+  uint16_t getState(const uint16_t slave) {
+    std::lock_guard<std::mutex> guard(contextMutex_);
+    int lowest_state = ecx_readstate(&ecatContext_);
+
+    // ecx_readstate updates reads all slaves in worst case with one datagram per slaves, and or's all the ALStatusCodes.
+    // therefore we update here the bus AL StatusCode which is the OR of all slave's ALStatusCode!
+    busDiagnosisLog_.ecatApplicationLayerStatus = ecatContext_.slavelist[0].ALstatuscode;
+    if (slave == 0) {
+      return lowest_state;
+    }
+    return ecatContext_.slavelist[slave].state;
+  }
+
   void setStateLocked(const uint16_t state, const uint16_t slave = 0) {
     if (!initlialized_) {
       MELO_WARN_STREAM("[soem_interface_rsl::" << name_ << "] Bus " << name_ << " was not successfully initialized, skipping operation");
@@ -709,18 +737,6 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl {
       }
     }
     return false;
-  }
-
-  /*!
-   * Returns a pair with the TxPdo and RxPdo sizes for the requested address
-   * Overloads the "PdoSizeMap getHardwarePdoSizes()" method.
-   *
-   * @param      slave  Address of the slave
-   *
-   * @return     std::pair with the rx (first) and tx (second) Pdo sizes
-   */
-  EthercatBusBase::PdoSizePair getHardwarePdoSizes(const uint16_t slave) {
-    return std::make_pair(ecatContext_.slavelist[slave].Obytes, ecatContext_.slavelist[slave].Ibytes);
   }
 
   //! Name of the bus.
@@ -912,8 +928,8 @@ void EthercatBusBase::setState(const uint16_t state, const uint16_t slave) {
   pImpl_->setState(state, slave);
 }
 
-void EthercatBusBase::setState(soem_interface_rsl::ETHERCAT_SM_STATE state) {
-  pImpl_->setState(static_cast<uint16_t>(state), 0);
+void EthercatBusBase::setState(soem_interface_rsl::ETHERCAT_SM_STATE state, const uint16_t slave) {
+  pImpl_->setState(static_cast<uint16_t>(state), slave);
 }
 
 bool EthercatBusBase::waitForState(const uint16_t state, const uint16_t slave, const unsigned int maxRetries) {
@@ -965,8 +981,12 @@ EthercatBusBase::PdoSizeMap EthercatBusBase::getHardwarePdoSizes() {
   return pImpl_->getHardwarePdoSizes();
 }
 
-int EthercatBusBase::getState(const uint16_t slave) {
-  return pImpl_->getState(slave);
+EthercatBusBase::PdoSizePair EthercatBusBase::getHardwarePdoSizes(const uint16_t slave) {
+  return pImpl_->getHardwarePdoSizes(slave);
+}
+
+soem_interface_rsl::ETHERCAT_SM_STATE EthercatBusBase::getEthercatState(const uint16_t slave) {
+  return pImpl_->getEthercatState(slave);
 }
 
 bool EthercatBusBase::doBusMonitoring(bool logErrorCounterForDiagnosis) {

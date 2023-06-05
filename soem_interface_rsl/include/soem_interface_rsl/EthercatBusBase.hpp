@@ -165,15 +165,16 @@ class SOEM_RSL_EXPORT EthercatBusBase : private EthercatBusBaseTemplateAdapter {
   /*!
    * Set the desired EtherCAT state machine state.
    * @param state Desired state.
-   * @param slave Address of the slave, 0 for all slaves.
+   * @param slave Address of the slave, default  0 for all slaves.
    */
   void setState(const uint16_t state, const uint16_t slave = 0);
 
   /*!
    * Set the desired EtherCAT state machine state.
    * @param state Desired state for all slaves on the bus.
+   * @param slave Address of the slave, default  0 for all slaves.
    */
-  void setState(ETHERCAT_SM_STATE state);
+  void setState(ETHERCAT_SM_STATE state, const uint16_t slave = 0);
 
   /*!
    * Wait for an EtherCAT state machine state to be reached.
@@ -190,10 +191,10 @@ class SOEM_RSL_EXPORT EthercatBusBase : private EthercatBusBaseTemplateAdapter {
    * Reads the ethercat state machine state, updates the state information of all slaves.
    * Therefore reads all slaves in case not all slaves are in the same state.
    * @param slave address of the slave, 0 for the lowest state of all slaves
-   * @return ecat sm state (EC_STATE_...) of the slave.
+   * @return Ethercat State Machine Enum.
    */
 
-  int getState(const uint16_t slave = 0);
+  soem_interface_rsl::ETHERCAT_SM_STATE getEthercatState(const uint16_t slave = 0);
 
   /*!
    * Checks if all slaves are in EC_STATE_OPERATIONAL, therefore reads EC state from all slaves!
@@ -237,6 +238,7 @@ class SOEM_RSL_EXPORT EthercatBusBase : private EthercatBusBaseTemplateAdapter {
    *             sizes
    */
   PdoSizeMap getHardwarePdoSizes();
+  PdoSizePair getHardwarePdoSizes(const uint16_t slave);
 
   /*!
    * Send a writing SDO.
