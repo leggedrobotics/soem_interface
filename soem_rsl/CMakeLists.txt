@@ -45,11 +45,11 @@ endif()
 
 message("OS is ${OS}")
 
-set(INCLUDE_DIRS ./soem
-    ./soem/soem
-    ./soem/osal
-    ./soem/osal/${OS}
-    ./soem/oshw/${OS})
+set(INCLUDE_DIRS ./soem_rsl
+    ./soem_rsl/soem_rsl
+    ./soem_rsl/osal
+    ./soem_rsl/osal/${OS}
+    ./soem_rsl/oshw/${OS})
 
 set(soem_rsl_INCLUDE_INSTALL_DIR include/soem_rsl)
 set(soem_rsl_LIB_INSTALL_DIR lib)
