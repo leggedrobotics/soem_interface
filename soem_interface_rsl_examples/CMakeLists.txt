@@ -19,7 +19,7 @@
 # along with the soem_interface_rsl.  If not, see <https://www.gnu.org/licenses/>.
 
 cmake_minimum_required(VERSION 2.8.3)
-project(soem_interface_examples)
+project(soem_interface_rsl_examples)
 
 add_definitions(-std=c++14 -Wall -Werror)
 add_definitions(-DMELO_USE_COUT)

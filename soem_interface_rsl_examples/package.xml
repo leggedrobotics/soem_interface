@@ -23,7 +23,7 @@ along with the soem_interface_rsl.  If not, see<https://www.gnu.org/licenses/>
 <-->
   <package format="2">
 
-    <name>soem_interface_examples</name>
+    <name>soem_interface_rsl_examples</name>
     <version>0.4.0</version>
     <description>Examples on how to use the soem_interface_rsl package.</description>
 

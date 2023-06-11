@@ -20,8 +20,8 @@
 ** along with the soem_interface_rsl.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <soem_interface_examples/ExampleSlave.hpp>
 #include <soem_interface_rsl/EthercatBusBase.hpp>
+#include <soem_interface_rsl_examples/ExampleSlave.hpp>
 
 // This shows a minimal example on how to use the soem_interface_rsl library.
 // Keep in mind that this is non-working example code, with only minimal error handling
@@ -33,8 +33,8 @@ int main(int argc, char** argv) {
 
   std::unique_ptr<soem_interface_rsl::EthercatBusBase> bus = std::make_unique<soem_interface_rsl::EthercatBusBase>(busName);
 
-  std::shared_ptr<soem_interface_examples::ExampleSlave> slave =
-      std::make_shared<soem_interface_examples::ExampleSlave>(slaveName, bus.get(), slaveAddress);
+  std::shared_ptr<soem_interface_rsl_examples::ExampleSlave> slave =
+      std::make_shared<soem_interface_rsl_examples::ExampleSlave>(slaveName, bus.get(), slaveAddress);
 
   bus->addSlave(slave);
   bus->startup();

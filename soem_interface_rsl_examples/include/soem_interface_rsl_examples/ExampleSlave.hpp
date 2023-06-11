@@ -28,7 +28,7 @@
 #define RX_PDO_ID 0x6000
 #define TX_PDO_ID 0x7000
 
-namespace soem_interface_examples {
+namespace soem_interface_rsl_examples {
 
 struct TxPdo {
   uint8_t state = 0;
@@ -62,4 +62,4 @@ class ExampleSlave : public soem_interface_rsl::EthercatSlaveBase {
   RxPdo command_;
 };
 
-}  // namespace soem_interface_examples
+}  // namespace soem_interface_rsl_examples

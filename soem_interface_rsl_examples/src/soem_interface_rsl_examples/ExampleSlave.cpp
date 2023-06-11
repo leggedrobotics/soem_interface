@@ -20,9 +20,9 @@
 ** along with the soem_interface_rsl.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <soem_interface_examples/ExampleSlave.hpp>
+#include <soem_interface_rsl_examples/ExampleSlave.hpp>
 
-namespace soem_interface_examples {
+namespace soem_interface_rsl_examples {
 
 ExampleSlave::ExampleSlave(const std::string& name, soem_interface_rsl::EthercatBusBase* bus, const uint32_t address)
     : soem_interface_rsl::EthercatSlaveBase(bus, address), name_(name) {
@@ -50,4 +50,4 @@ void ExampleSlave::shutdown() {
   // Do nothing
 }
 
-}  // namespace soem_interface_examples
+}  // namespace soem_interface_rsl_examples
