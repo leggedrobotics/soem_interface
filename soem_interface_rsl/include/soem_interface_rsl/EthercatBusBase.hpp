@@ -36,8 +36,10 @@
 // soem_interface_rsl
 
 #include <soem_interface_rsl/common/soem_rsl_export.h>
+#include <soem_interface_rsl/common/EthercatTypes.hpp>
 #include <soem_interface_rsl/common/ExtendedRegisters.hpp>
 #include <soem_interface_rsl/common/Macros.hpp>
+#include <soem_interface_rsl/common/ObjectDictionaryUtilities.hpp>
 #include <soem_interface_rsl/common/ThreadSleep.hpp>
 
 namespace soem_interface_rsl {

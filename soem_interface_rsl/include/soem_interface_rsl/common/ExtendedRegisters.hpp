@@ -1,14 +1,32 @@
-//
-// Created by fabi on 14.05.23.
-//
+/*
+** Copyright (2019-2020) Robotics Systems Lab - ETH Zurich:
+** Markus Staeuble, Jonas Junger, Johannes Pankert, Philipp Leemann,
+** Tom Lankhorst, Samuel Bachmann, Gabriel Hottiger, Lennert Nachtigall,
+** Mario Mauerer, Remo Diethelm
+**
+** This file is part of the soem_interface_rsl.
+**
+** The soem_interface_rsl is free software: you can redistribute it and/or modify
+** it under the terms of the GNU General Public License as published by
+** the Free Software Foundation, either version 3 of the License, or
+** (at your option) any later version.
+**
+** The seom_interface is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU General Public License
+** along with the soem_interface_rsl.  If not, see <https://www.gnu.org/licenses/>.
+*/
 
 #ifndef ETHERCAT_WS_EXTENDEDREGISTERS_HPP
 #define ETHERCAT_WS_EXTENDEDREGISTERS_HPP
 
-#include <stddef.h>
-#include <stdint.h>
 #include <array>
 #include <cassert>
+#include <cstddef>
+#include <cstdint>
 #include <cstring>
 #include <exception>
 #include <stdexcept>
