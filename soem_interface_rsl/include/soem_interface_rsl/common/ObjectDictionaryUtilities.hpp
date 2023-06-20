@@ -30,160 +30,193 @@
 
 namespace soem_interface_rsl {
 
-// todo make this reasonable:
-//  the definition of a Object Dictionary should be simpel, the best is a macro which generates nested structs / array's.
-//  each Object Entry (depending on the type, VARiable, ARRAY, RECORD) can also provide some special member functions
-//  then also PDO's (dynamic) can be hardcoded with a simpel Macro.
-//  addtionally, auto generation of PDO and ObjectDict Headers from Slave Info is possible.
+namespace detail {
 
-template <ETHERCAT_TYPE typeEnum>
-struct TypeFromECType {};
+template <typename DescriptionTuple, typename DataTuple, typename Function, typename... FunctionArgs, size_t... Indices>
+constexpr void callFunctionOnDoubleTupleHelper(const DescriptionTuple& descriptionTuple, DataTuple& dataTuple, Function&& function,
+                                               std::index_sequence<Indices...>, FunctionArgs&&... functionArgs) {
+  (std::forward<Function>(function)(Indices, std::get<Indices>(descriptionTuple), std::get<Indices>(dataTuple),
+                                    std::forward<FunctionArgs>(functionArgs)...),
+   ...);
+}
 
-template <>
-struct TypeFromECType<ETHERCAT_TYPE::ECT_BOOLEAN> {
-  using Type = bool;
-  static constexpr size_t size = sizeof(Type);
+template <typename DescriptionTuple, typename DataTuple, typename Function, typename... FunctionArgs>
+constexpr void callFunctionDoubleTuple(const DescriptionTuple& descriptionTuple, DataTuple& dataTuple, Function&& function,
+                                       FunctionArgs&&... functionArgs) {
+  constexpr size_t descriptionSize = std::tuple_size_v<DescriptionTuple>;
+  constexpr size_t dataSize = std::tuple_size_v<DataTuple>;
+  static_assert(descriptionSize == dataSize, "Description and Data Tuple require the same size");
+  callFunctionOnDoubleTupleHelper(descriptionTuple, dataTuple, std::forward<Function>(function),
+                                  std::make_index_sequence<descriptionSize>(), std::forward<FunctionArgs>(functionArgs)...);
+}
+
+template <typename TupleLike_, typename Function, typename... FunctionArgs, size_t... Indices>
+constexpr void callFunctionOnTuple(const TupleLike_& tuple, Function&& function, std::index_sequence<Indices...>,
+                                   FunctionArgs&&... functionArgs) {
+  (function(Indices, std::get<Indices>(tuple), std::forward<FunctionArgs>(functionArgs)...), ...);
+}
+
+template <typename TupleLike_, typename Function, typename... FunctionArgs>
+constexpr void callFunctionOnTuple(const TupleLike_& tuple, Function&& function, FunctionArgs&&... functionArgs) {
+  constexpr size_t tupleSize = std::tuple_size_v<TupleLike_>;
+  return callFunctionOnTuple(tuple, std::forward<Function>(function), std::make_index_sequence<tupleSize>(),
+                             std::forward<FunctionArgs>(functionArgs)...);
+}
+
+template <class Callable>
+struct SubEntryIterator {
+ private:
+  Callable callable_;
+
+ public:
+  SubEntryIterator() = delete;
+  explicit SubEntryIterator(Callable&& callable) : callable_(callable){};
+
+  template <typename DescriptionContainerElement, typename DataContainerElement>
+  constexpr void operator()(size_t entryIndex, DescriptionContainerElement descriptionContainerElement,
+                            DataContainerElement& dataContainerElement) {
+    // we have a nested tuple, the 0th entry is for both the same description.
+    constexpr auto descriptionEntry = std::get<0>(descriptionContainerElement);
+    constexpr auto descriptionSubentryTuple = std::get<1>(descriptionContainerElement);
+    auto& dataSubentryTuple = std::get<1>(dataContainerElement);
+    std::cout << "Entry: " << descriptionEntry.OD_Index << " tupleIndex: " << entryIndex << " Name: " << descriptionEntry.Name << std::endl;
+    callFunctionDoubleTuple(descriptionSubentryTuple, dataSubentryTuple, callable_, entryIndex, descriptionEntry);
+  };
 };
 
-template <>
-struct TypeFromECType<ETHERCAT_TYPE::ECT_INTEGER8> {
-  using Type = int8_t;
-  static constexpr size_t size = sizeof(Type);
+struct EntryAndSubEntryPrinter {
+  template <typename DescriptionContainerElement, typename DataContainerElement>
+  constexpr void operator()(size_t entryIndex, DescriptionContainerElement descriptionContainerElement,
+                            DataContainerElement& dataContainerElement) {
+    // we have a nested tuple, the 0th entry is for both the same description.
+    constexpr auto descriptionEntry = std::get<0>(descriptionContainerElement);
+    constexpr auto descriptionSubentryTuple = std::get<1>(descriptionContainerElement);
+    auto& dataSubentryTuple = std::get<1>(dataContainerElement);
+    std::cout << "Entry: " << descriptionEntry.OD_Index << " tupleIndex: " << entryIndex << " Name: " << descriptionEntry.Name << std::endl;
+
+    auto funOnSubentry = [](size_t subEntryIndex, auto subEntryDescription, auto& subEntryData) {
+      // we can use descriptionContainerElement in constexpr fashion
+      constexpr soem_interface_rsl::ETHERCAT_TYPE ecatType = subEntryDescription.EthercatType;
+      std::cout << "       Subindex: " << static_cast<uint16_t>(subEntryDescription.SubIndex) << " subEntryTupleIndex: " << subEntryIndex
+                << " Name: " << subEntryDescription.Name << " Value: " << subEntryData << std::endl;
+    };
+
+    callFunctionDoubleTuple(descriptionSubentryTuple, dataSubentryTuple, funOnSubentry);
+  };
 };
 
-template <>
-struct TypeFromECType<ETHERCAT_TYPE::ECT_INTEGER16> {
-  using Type = int16_t;
-  static constexpr size_t size = sizeof(Type);
+}  // namespace detail
+
+// Non generated - general code, relies on the generated code/containers, to have the same structure.
+template <typename OD_Description_, typename OD_DescriptionContainer_>
+struct ObjectDictionaryDescriptionConcrete {
+ private:
+  static constexpr OD_DescriptionContainer_ OD_DescriptionContainer{};
+  using OD_Description = OD_Description_;
+
+  template <size_t InternalIndex, size_t InternalSubIndex>
+  struct GetDescriptionSubEntryInternalHelper {
+    struct internal {
+      using ODEntryTuple_Type_found = typename std::tuple_element<InternalIndex, OD_DescriptionContainer_>::type;
+      using ODEntryListTuple_Type_found = typename std::tuple_element<1, ODEntryTuple_Type_found>::type;
+    };
+    using type = typename std::tuple_element<InternalSubIndex, typename internal::ODEntryListTuple_Type_found>::type;
+  };
+
+  template <size_t InternalIndex>
+  using GetDescriptionEntryInternal = typename std::tuple_element<InternalIndex, OD_DescriptionContainer_>::type;
+
+ public:
+  template <uint16_t Index>
+  using GetDescriptionEntry = typename std::tuple_element<
+      0, GetDescriptionEntryInternal<OD_Description::Internal::IndexInternalMap::template InternalIndexAt<Index>>>::type;
+
+ private:
+  template <uint16_t Index, uint8_t SubIndex>
+  struct GetDescriptionSubEntry_ {
+    using DescriptionEntry = GetDescriptionEntry<Index>;
+    using type = typename GetDescriptionSubEntryInternalHelper<
+        OD_Description::Internal::IndexInternalMap::template InternalIndexAt<Index>,
+        DescriptionEntry::Internal::SubIndexInternalMap::template InternalIndexAt<SubIndex>>::type;
+  };
+
+ public:
+  template <uint16_t Index, uint16_t SubIndex>
+  using GetDescriptionSubEntry = typename GetDescriptionSubEntry_<Index, SubIndex>::type;
+
+  template <uint16_t Index, uint16_t SubIndex>
+  using GetDescriptionSubEntryType = typename GetDescriptionSubEntry_<Index, SubIndex>::type::Type;
+
+  template <typename OD_DataContainer_>
+  static void iterateOverSubEntryStructure(OD_DataContainer_& odDataContainer) {
+    auto funOnSubentry = [](size_t subEntryIndex, auto subEntryDescription, auto& subEntryData, size_t entryIndex, auto descriptionEntry) {
+      // we can use descriptionContainerElement in constexpr fashion
+      constexpr soem_interface_rsl::ETHERCAT_TYPE ecatType = subEntryDescription.EthercatType;
+      std::cout << "       Subindex: " << static_cast<uint16_t>(subEntryDescription.SubIndex) << " subEntryTupleIndex: " << subEntryIndex
+                << " Name: " << subEntryDescription.Name << std::endl;
+
+      switch (ecatType) {
+        case soem_interface_rsl::ETHERCAT_TYPE::UNSIGNED16:
+          subEntryData = static_cast<typename decltype(subEntryDescription)::Type>(10);
+          break;
+        case soem_interface_rsl::ETHERCAT_TYPE::INTEGER32:
+          subEntryData = static_cast<typename decltype(subEntryDescription)::Type>(-10);
+          break;
+      }
+      // to something type specific here.
+    };
+
+    detail::callFunctionDoubleTuple(OD_DescriptionContainer, odDataContainer, detail::SubEntryIterator(std::move(funOnSubentry)));
+  }
+
+  template <typename OD_DataContainer_>
+  static void printODwithValues(const OD_DataContainer_& odDataContainer) {
+    detail::callFunctionDoubleTuple(OD_DescriptionContainer, odDataContainer, detail::EntryAndSubEntryPrinter{});
+  }
 };
 
-template <>
-struct TypeFromECType<ETHERCAT_TYPE::ECT_INTEGER32> {
-  using Type = int32_t;
-  static constexpr size_t size = sizeof(Type);
+template <typename OD_Description_, typename OD_DataContainer_>
+struct ObjectDiectionaryDataConcrete {
+  using OD_Description = OD_Description_;
+  OD_DataContainer_ data{};
+
+ private:
+  template <size_t InternalIndex, size_t InternalSubIndex>
+  auto getSubEntryInternal() {
+    return std::get<InternalSubIndex>(std::get<1>(std::get<InternalIndex>(data)));
+  }
+
+  template <size_t InternalIndex>
+  using GetDescriptionEntryInternal = typename std::tuple_element<InternalIndex, OD_DataContainer_>::type;
+
+  template <uint16_t Index>
+  using GetDescriptionEntry = typename std::tuple_element<
+      0, GetDescriptionEntryInternal<OD_Description::Internal::IndexInternalMap::template InternalIndexAt<Index>>>::type;
+
+ public:
+  template <uint16_t Index, uint8_t SubIndex>
+  auto getValueByIndex() {
+    using DescriptionEntry = GetDescriptionEntry<Index>;
+    return getSubEntryInternal<OD_Description::Internal::IndexInternalMap::template InternalIndexAt<Index>,
+                               DescriptionEntry::Internal::SubIndexInternalMap::template InternalIndexAt<SubIndex>>();
+  };
 };
 
-template <>
-struct TypeFromECType<ETHERCAT_TYPE::ECT_INTEGER64> {
-  using Type = int64_t;
-  static constexpr size_t size = sizeof(Type);
-};
-
-template <>
-struct TypeFromECType<ETHERCAT_TYPE::ECT_UNSIGNED8> {
-  using Type = uint8_t;
-  static constexpr size_t size = sizeof(Type);
-};
-
-template <>
-struct TypeFromECType<ETHERCAT_TYPE::ECT_UNSIGNED16> {
-  using Type = uint16_t;
-  static constexpr size_t size = sizeof(Type);
-};
-
-template <>
-struct TypeFromECType<ETHERCAT_TYPE::ECT_UNSIGNED24> {
-  // whats this.?
-};
-
-template <>
-struct TypeFromECType<ETHERCAT_TYPE::ECT_UNSIGNED32> {
-  using Type = uint32_t;
-  static constexpr size_t size = sizeof(Type);
-};
-
-template <>
-struct TypeFromECType<ETHERCAT_TYPE::ECT_UNSIGNED64> {
-  using Type = uint64_t;
-  static constexpr size_t size = sizeof(Type);
-};
-
-template <>
-struct TypeFromECType<ETHERCAT_TYPE::ECT_REAL64> {
-  using Type = double;
-  static constexpr size_t size = sizeof(Type);
-};
-
-template <>
-struct TypeFromECType<ETHERCAT_TYPE::ECT_REAL32> {
-  using Type = float;
-  static constexpr size_t size = sizeof(Type);
-};
-
-struct SubEntry {
-  constexpr SubEntry(uint8_t subIdx_, uint16_t simplifiedAccess_, std::string_view name_, ETHERCAT_TYPE datatype_)
-      : subIdx(subIdx_), simplifiedAccess(simplifiedAccess_), name(name_), datatype(datatype_){};
-  constexpr SubEntry(uint8_t subIdx_, uint16_t simplifiedAccess_, std::string_view name_, ETHERCAT_TYPE datatype_,
-                     std::string_view unitStr_, double toSIFactor_, std::string_view siUnitStr_)
-      : subIdx(subIdx_),
-        simplifiedAccess(simplifiedAccess_),
-        name(name_),
-        datatype(datatype_),
-        unitStr(unitStr_),
-        toSIFactor(toSIFactor_),
-        siUnitStr(siUnitStr_){};
-
-  constexpr explicit SubEntry(uint8_t subIdx_, uint16_t simplifiedAccess_ = EcAccess::NOT_IMPL)
-      : subIdx(subIdx_), simplifiedAccess(simplifiedAccess_), name("not_impl"), datatype(ETHERCAT_TYPE::ECT_BOOLEAN){};
-
-  const uint8_t subIdx;
-  uint16_t simplifiedAccess{EcAccess::NOT_IMPL};
-  const std::string_view name;
-  const ETHERCAT_TYPE datatype;
-  const std::optional<std::string_view> unitStr{};
-  const std::optional<double> toSIFactor{};
-  const std::optional<std::string_view> siUnitStr{};
-
-  constexpr uint8_t getSubidx() { return subIdx; };
-};
-
-template <class EntryType, class EntryEnum>
-struct Entries {
-  using EntryCollection = std::array<EntryType, static_cast<size_t>(EntryEnum::SIZE) - 1>;
-  EntryCollection entries;
-
-  using iterator = typename EntryCollection::iterator;
-  using const_iterator = typename EntryCollection::const_iterator;
-  [[nodiscard]] constexpr const_iterator begin() const { return entries.begin(); }
-  [[nodiscard]] constexpr const_iterator end() const { return entries.end(); }
-  [[nodiscard]] constexpr const_iterator cbegin() const { return entries.cbegin(); }
-  [[nodiscard]] constexpr const_iterator cend() const { return entries.cend(); }
-
-  template <typename IdxType>
-  constexpr const EntryType& operator[](const IdxType idx) const {
-    if constexpr (std::is_same<IdxType, EntryEnum>::value) {
-      return entries[static_cast<size_t>(idx)];
+// only possible on single entry level. or on packed structures.
+template <class T>
+T fromRaw(void* data, size_t size, T& readEntryOut) {
+  if (size > sizeof(T)) {
+    // todo care about endianess of platform.
+    auto returnMemcpy = std::memcpy(&readEntryOut, data, sizeof(T));
+    if (returnMemcpy) {
+      return true;
     } else {
-      return entries[idx];
+      // nullpointer returned by memcpy.
+      return false;
     }
+  } else {
+    throw std::runtime_error("EntryFromRaw provided buffer should contain Fullobject but is to small to fully hold it.");
   }
-
-  [[nodiscard]] constexpr ETHERCAT_TYPE ecDatatypeByEnum(const EntryEnum entryEnum) const {
-    for (const auto& entry : entries) {
-      if (entry.subIdx == static_cast<size_t>(entryEnum)) {
-        return entry.datatype;
-      }
-    }
-    throw std::runtime_error("entry not found, should be throw at ct");
-  }
-
-  [[nodiscard]] constexpr bool check() const {
-    unsigned int i = 0;
-    for (const auto& entry : entries) {
-      ++i;
-      if (entry.subIdx != i) {
-        return true;
-      }
-    }
-    return true;
-  }
-};
-
-template <uint16_t id_, uint8_t nSubEntries_>
-struct ObjectBase {
-  static constexpr uint16_t idx{id_};
-  static constexpr uint8_t nSubEntries{nSubEntries_};
-  using ETHERCAT_TYPE = soem_interface_rsl::ETHERCAT_TYPE;
-};
+}
 
 }  // namespace soem_interface_rsl
