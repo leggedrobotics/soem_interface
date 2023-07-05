@@ -116,7 +116,7 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl {
           ecx_close(&ecatContext_);
           return false;  // avoid that executation continues.
         }
-        if (ecx_detect_slaves(&ecatContext_) == static_cast<int>(slaves_.size())) {
+        if (ecx_detect_slaves(&ecatContext_) >= static_cast<int>(slaves_.size())) {
           // on some of the older (rsl) anydrives there seems to be a short race between bus is responsive and slave is fully ready...
           // so give them this 1 sec to be fully ready to be started...
           soem_interface_rsl::threadSleep(1.0);
@@ -135,10 +135,11 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl {
       }
 
       // this should no work cleanly, since we're sure that all slaves are started.
-      if (ecx_config_init(&ecatContext_, FALSE) != static_cast<int>(slaves_.size())) {
+      if (ecx_config_init(&ecatContext_, FALSE) < static_cast<int>(slaves_.size())) {
         ecx_close(&ecatContext_);
         MELO_ERROR_STREAM("[soem_interface_rsl::" << name_ << "] "
                                                   << "No slaves have been found.");
+        return false;
       }
 
       int nSlaves = *ecatContext_.slavecount;
