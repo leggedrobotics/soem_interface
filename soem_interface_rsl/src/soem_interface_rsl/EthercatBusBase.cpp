@@ -304,19 +304,21 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl {
 
   void shutdown() {
     if (initlialized_) {
-      std::lock_guard<std::mutex> guard(contextMutex_);
-      // Set the slaves to state Init.
-      if (*ecatContext_.slavecount > 0) {
-        setStateLocked(EC_STATE_INIT);
-        waitForStateLocked(EC_STATE_INIT);
-      }
-
+      {
+        std::lock_guard<std::mutex> guard(contextMutex_);
+        // Set the slaves to state Init.
+        if (*ecatContext_.slavecount > 0) {
+          setStateLocked(EC_STATE_INIT);
+          waitForStateLocked(EC_STATE_INIT);
+        }
+      }  // release the contextMutex_ in case slave wants to do low_level commands at shutdown.
       for (auto& slave : slaves_) {
         slave->shutdown();
       }
     }
 
     // Close the port.
+    std::lock_guard<std::mutex> guard(contextMutex_);
     if (ecatContext_.port != nullptr) {
       MELO_INFO_STREAM("[soem_interface_rsl::" << name_ << "] Closing socket ...");
       ecx_close(&ecatContext_);
