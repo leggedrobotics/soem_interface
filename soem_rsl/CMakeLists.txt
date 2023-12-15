@@ -95,9 +95,8 @@ target_include_directories(soem_rsl
 
 message("LIB_DIR: ${soem_rsl_LIB_INSTALL_DIR}")
 
-install(TARGETS soem_rsl EXPORT soem_rslConfig DESTINATION ${soem_rsl_LIB_INSTALL_DIR})
+install(TARGETS soem_rsl  DESTINATION lib)
 
-install(EXPORT soem_rslConfig DESTINATION share/soem_rsl/cmake)
 
 install(FILES
   ${soem_rsl_HEADERS}
@@ -112,7 +111,9 @@ install(FILES
 )
 
 ament_export_include_directories(include)
-
+ament_export_libraries(
+  soem_rsl
+)
 #message(${CMAKE_INSTALL_PREFIX})
 #add_custom_target(link_target ALL
  #                 COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_INSTALL_PREFIX}/include/soem_rsl/ethercattype.h ${CMAKE_INSTALL_PREFIX}/include/ethercattype.h
