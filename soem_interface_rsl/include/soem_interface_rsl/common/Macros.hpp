@@ -22,44 +22,33 @@
 
 #pragma once
 
-#include <soem_interface_rsl/EthercatBusBase.hpp>
-#include <soem_interface_rsl/EthercatSlaveBase.hpp>
+// std
+#include <cassert>
+#include <deque>
+#include <iostream>
+#include <mutex>
 
-#define RX_PDO_ID 0x6000
-#define TX_PDO_ID 0x7000
+// message logger
+#include "soem_rsl_export.h"
+#include <message_logger/message_logger.hpp>
 
-namespace soem_interface_examples {
+namespace soem_interface_rsl::common {
 
-struct TxPdo {
-  uint8_t state = 0;
-  float data1 = 0.0;
-  float data2 = 0.0;
-} __attribute__((packed));
-
-struct RxPdo {
-  float command1 = 0.0;
-  float command2 = 0.0;
-} __attribute__((packed));
-
-class ExampleSlave : public soem_interface_rsl::EthercatSlaveBase {
+class MessageLog {
  public:
-  ExampleSlave(const std::string& name, soem_interface_rsl::EthercatBusBase* bus, const uint32_t address);
-  ~ExampleSlave() override = default;
+  using Log = std::deque<std::pair<message_logger::log::levels::Level, std::string>>;
 
-  std::string getName() const override { return name_; }
+ protected:
+  static constexpr size_t maxLogSize_ = 20;
 
-  bool startup() override;
-  void updateRead() override;
-  void updateWrite() override;
-  void shutdown() override;
+  static std::mutex logMutex_;
+  static Log log_;
 
-  PdoInfo getCurrentPdoInfo() const override { return pdoInfo_; }
-
- private:
-  const std::string name_;
-  PdoInfo pdoInfo_;
-  TxPdo reading_;
-  RxPdo command_;
+ public:
+  static void insertMessage(message_logger::log::levels::Level level, const std::string& message);
+  static Log getLog();
+  static void clearLog();
+  static Log getAndClearLog();
 };
 
-}  // namespace soem_interface_examples
+}  // namespace soem_interface_rsl

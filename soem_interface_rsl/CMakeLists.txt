@@ -18,16 +18,17 @@
 # You should have received a copy of the GNU General Public License
 # along with the soem_interface_rsl.  If not, see <https://www.gnu.org/licenses/>.
 
-cmake_minimum_required(VERSION 2.8.3)
-project(soem_interface_examples)
+cmake_minimum_required(VERSION 3.15)
+project(soem_interface_rsl)
 
-add_definitions(-std=c++14 -Wall -Werror)
+add_definitions(-std=c++17 -Wall -Werror)
 add_definitions(-DMELO_USE_COUT)
+
+
 
 set(PACKAGE_DEPENDENCIES
   message_logger
   soem_rsl
-  soem_interface_rsl
 )
 
 find_package(catkin REQUIRED
@@ -49,35 +50,38 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
+#this has to be a shared lib because we have to avoid symbol clashes with other (older) versions of SOEM which might exists in the workspace.
+# e.g. ros-noetic-soem package (used by BOTA, ANYbotics.)
 add_library(
-  ${PROJECT_NAME}
-  src/${PROJECT_NAME}/ExampleSlave.cpp
+  ${PROJECT_NAME} SHARED
+  src/${PROJECT_NAME}/common/ThreadSleep.cpp
+  src/${PROJECT_NAME}/common/Macros.cpp
+  src/${PROJECT_NAME}/EthercatSlaveBase.cpp
+  src/${PROJECT_NAME}/EthercatBusManagerBase.cpp
+  src/${PROJECT_NAME}/EthercatBusBase.cpp
 )
+
 add_dependencies(
   ${PROJECT_NAME}
   ${catkin_EXPORTED_TARGETS}
 )
+
+# https://stackoverflow.com/questions/2222162/how-to-apply-fvisibility-option-to-symbols-in-static-libraries
+# special link option.
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--exclude-libs,ALL")
+# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wl,--exclude-libs,ALL")
+target_link_options(${PROJECT_NAME} PRIVATE "-Wl,--exclude-libs,ALL")
+
 target_link_libraries(
   ${PROJECT_NAME}
   ${catkin_LIBRARIES}
 )
 
-add_executable(
-  ${PROJECT_NAME}_1
-  src/example_slave.cpp
-)
-add_dependencies(
-  ${PROJECT_NAME}_1
-  ${PROJECT_NAME}
-  ${catkin_EXPORTED_TARGETS}
-)
-target_link_libraries(
-  ${PROJECT_NAME}_1
-  ${PROJECT_NAME}
-  ${catkin_LIBRARIES}
-)
+#hide all symboles except the explicitly marked ones.
+set_target_properties(${PROJECT_NAME} PROPERTIES CXX_VISIBILITY_PRESET hidden)
+set_target_properties(${PROJECT_NAME} PROPERTIES C_VISIBILITY_PRESET hidden)
 
-install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_1
+install(TARGETS ${PROJECT_NAME}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

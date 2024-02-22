@@ -20,34 +20,14 @@
 ** along with the soem_interface_rsl.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <soem_interface_examples/ExampleSlave.hpp>
+#include <soem_interface_rsl/common/ThreadSleep.hpp>
 
-namespace soem_interface_examples {
+#include <thread>
 
-ExampleSlave::ExampleSlave(const std::string& name, soem_interface_rsl::EthercatBusBase* bus, const uint32_t address)
-    : soem_interface_rsl::EthercatSlaveBase(bus, address), name_(name) {
-  pdoInfo_.rxPdoId_ = RX_PDO_ID;
-  pdoInfo_.txPdoId_ = TX_PDO_ID;
-  pdoInfo_.rxPdoSize_ = sizeof(command_);
-  pdoInfo_.txPdoSize_ = sizeof(reading_);
-  pdoInfo_.moduleId_ = 0x00123456;
+namespace soem_interface_rsl {
+
+void threadSleep(const double duration) {
+  std::this_thread::sleep_for(std::chrono::nanoseconds(static_cast<int64_t>(1e9 * duration)));
 }
 
-bool ExampleSlave::startup() {
-  // Do nothing else
-  return true;
-}
-
-void ExampleSlave::updateRead() {
-  bus_->readTxPdo(address_, reading_);
-}
-
-void ExampleSlave::updateWrite() {
-  bus_->writeRxPdo(address_, command_);
-}
-
-void ExampleSlave::shutdown() {
-  // Do nothing
-}
-
-}  // namespace soem_interface_examples
+}  // namespace soem_interface_rsl

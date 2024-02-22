@@ -20,34 +20,38 @@
 ** along with the soem_interface_rsl.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <soem_interface_examples/ExampleSlave.hpp>
+//  soem_interface_rsl
+#include "soem_interface_rsl/common/Macros.hpp"
 
-namespace soem_interface_examples {
+namespace soem_interface_rsl {
+namespace common {
 
-ExampleSlave::ExampleSlave(const std::string& name, soem_interface_rsl::EthercatBusBase* bus, const uint32_t address)
-    : soem_interface_rsl::EthercatSlaveBase(bus, address), name_(name) {
-  pdoInfo_.rxPdoId_ = RX_PDO_ID;
-  pdoInfo_.txPdoId_ = TX_PDO_ID;
-  pdoInfo_.rxPdoSize_ = sizeof(command_);
-  pdoInfo_.txPdoSize_ = sizeof(reading_);
-  pdoInfo_.moduleId_ = 0x00123456;
+std::mutex MessageLog::logMutex_;
+MessageLog::Log MessageLog::log_;
+
+void MessageLog::insertMessage(message_logger::log::levels::Level level, const std::string& message) {
+  std::lock_guard<std::mutex> lock(logMutex_);
+  log_.push_back({level, message});
+  if (log_.size() > maxLogSize_) {
+    log_.pop_front();
+  }
 }
 
-bool ExampleSlave::startup() {
-  // Do nothing else
-  return true;
+MessageLog::Log MessageLog::getLog() {
+  std::lock_guard<std::mutex> lock(logMutex_);
+  return log_;
 }
 
-void ExampleSlave::updateRead() {
-  bus_->readTxPdo(address_, reading_);
+void MessageLog::clearLog() {
+  std::lock_guard<std::mutex> lock(logMutex_);
+  log_.clear();
 }
 
-void ExampleSlave::updateWrite() {
-  bus_->writeRxPdo(address_, command_);
+MessageLog::Log MessageLog::getAndClearLog() {
+  const Log log = getLog();
+  clearLog();
+  return log;
 }
 
-void ExampleSlave::shutdown() {
-  // Do nothing
-}
-
-}  // namespace soem_interface_examples
+}  // namespace common
+}  // namespace soem_interface_rsl
