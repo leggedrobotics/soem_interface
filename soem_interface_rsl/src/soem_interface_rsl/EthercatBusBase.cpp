@@ -664,6 +664,7 @@ struct EthercatBusBaseTemplateAdapter::EthercatSlaveBaseImpl {
                                                  << " has been reached after " << retry << " retries");
         return true;
       }
+      setStateLocked(state, slave);
     }
     MELO_WARN_STREAM("[soem_interface_rsl::" << name_ << "] Slave " << slave << ": Targetstate " << EthercatBusBase::getStateString(state)
                                              << " has not been reached. Current State: " << returnedState);
